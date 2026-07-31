@@ -376,6 +376,35 @@ export type Database = {
           },
         ]
       }
+      pin_login_attempts: {
+        Row: {
+          attempts: number
+          locked_until: string | null
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          locked_until?: string | null
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          locked_until?: string | null
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'pin_login_attempts_store_id_fkey'
+            columns: ['store_id']
+            isOneToOne: true
+            referencedRelation: 'stores'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       product_variants: {
         Row: {
           barcode: string | null

@@ -13,10 +13,10 @@ export function ConnectionStatus() {
       }`}
     >
       <span
-        className={`h-2 w-2 rounded-full ${isOnline ? 'bg-emerald-500' : 'bg-amber-500'}`}
+        className={`h-2 w-2 shrink-0 rounded-full ${isOnline ? 'bg-emerald-500' : 'bg-amber-500'}`}
         aria-hidden="true"
       />
-      {isOnline ? 'En línea' : 'Sin conexión'}
+      <span className="hidden sm:inline">{isOnline ? 'En línea' : 'Sin conexión'}</span>
     </span>
   )
 }

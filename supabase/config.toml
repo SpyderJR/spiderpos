@@ -412,3 +412,9 @@ enabled = true
 # declarative_schema_path = "./database"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+[functions.pin-login]
+# Endpoint público: se llama ANTES de que exista sesión (el cajero aún no
+# se ha autenticado), por eso no puede exigir un JWT de usuario. La función
+# hace su propia validación (rate limit + comparación de PIN con bcrypt).
+verify_jwt = false

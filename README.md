@@ -69,6 +69,18 @@ pnpm format            # Prettier (con orden de clases Tailwind)
 - SVG para logos/iconos, PNG/WebP para rasterizados, nombres en minúsculas con guiones.
 - El logo de cada **tienda cliente** NO va aquí: se sube desde su backoffice a Supabase Storage (bucket `store-logos/`, aislado por `store_id`).
 
+## Supabase (base de datos y Edge Functions)
+
+```bash
+pnpm dlx supabase link --project-ref <ref>                                  # vincular repo ↔ proyecto
+pnpm dlx supabase db push                                                    # aplicar migraciones (supabase/migrations)
+pnpm dlx supabase functions deploy pin-login --project-ref <ref> --use-api           # login por PIN (empleados)
+pnpm dlx supabase functions deploy create-staff-member --project-ref <ref> --use-api # alta de personal
+pnpm dlx supabase gen types typescript --project-id <ref> > src/lib/database/types.ts # tipos TS desde el esquema real
+```
+
+Ambas Edge Functions requieren `SUPABASE_SERVICE_ROLE_KEY` (inyectada automáticamente por la plataforma en runtime, nunca la pones tú a mano ahí). `pin-login` es pública (`verify_jwt = false`, ver `supabase/config.toml`) porque se llama antes de que exista sesión; `create-staff-member` exige un JWT de owner/manager.
+
 ## Despliegue
 
 Netlify vía CLI, ver `netlify.toml`. Instrucciones completas de publicación en la Fase 11 del PRD.
