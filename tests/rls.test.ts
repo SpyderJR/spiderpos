@@ -55,14 +55,12 @@ async function provisionTenant(label: 'a' | 'b'): Promise<Tenant> {
     .single()
   if (storeErr || !store) throw storeErr ?? new Error('No se pudo crear la tienda de prueba')
 
-  const { error: memberErr } = await admin
-    .from('store_members')
-    .insert({
-      user_id: userRes.user.id,
-      store_id: store.id,
-      role: 'owner',
-      full_name: `Owner ${label.toUpperCase()}`,
-    })
+  const { error: memberErr } = await admin.from('store_members').insert({
+    user_id: userRes.user.id,
+    store_id: store.id,
+    role: 'owner',
+    full_name: `Owner ${label.toUpperCase()}`,
+  })
   if (memberErr) throw memberErr
 
   const { error: seedErr } = await admin.rpc('seed_store_catalog', { p_store_id: store.id })

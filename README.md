@@ -45,8 +45,9 @@ Las llaves secretas (`service_role` de Supabase, access token de Mercado Pago) *
 pnpm dev            # servidor de desarrollo
 pnpm build           # typecheck + build de producción a /dist
 pnpm preview          # sirve el build de producción localmente
-pnpm test             # corre la suite de pruebas (Vitest)
+pnpm test             # corre la suite de pruebas de UI (Vitest + jsdom)
 pnpm test:watch       # pruebas en modo watch
+pnpm test:rls         # suite de aislamiento cross-tenant contra Supabase real (requiere SUPABASE_SERVICE_ROLE_KEY)
 pnpm lint             # ESLint
 pnpm format            # Prettier (con orden de clases Tailwind)
 ```
