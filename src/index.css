@@ -1,0 +1,62 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+
+/* Modo oscuro/claro: automático por prefers-color-scheme, con toggle manual vía clase .dark en <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+
+  /* Paleta de marca SpiderPOS — PRD sección 2.1 */
+  --color-carbon: #111827;
+  --color-carbon-50: #f9fafb;
+  --color-carbon-100: #f3f4f6;
+  --color-carbon-200: #e5e7eb;
+  --color-carbon-300: #d1d5db;
+  --color-carbon-400: #9ca3af;
+  --color-carbon-500: #6b7280;
+  --color-carbon-600: #4b5563;
+  --color-carbon-700: #374151;
+  --color-carbon-800: #1f2937;
+  --color-carbon-900: #111827;
+  --color-carbon-950: #0a0e17;
+
+  --color-brand: #7c3aed;
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+  --color-brand-800: #5b21b6;
+  --color-brand-900: #4c1d95;
+
+  --color-indigo-accent: #4f46e5;
+  --color-paper: #fafafa;
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Targets táctiles ≥ 44px en toda la app — PRD sección 7 (Accesibilidad) */
+button,
+a,
+input,
+select,
+[role='button'] {
+  min-height: 44px;
+}

@@ -1,0 +1,34 @@
+# Dependencias
+node_modules
+
+# Build
+dist
+dist-ssr
+*.local
+
+# Entorno — jamás se commitea (.env.example sí se commitea)
+.env
+.env.*
+!.env.example
+
+# Netlify
+.netlify
+
+# Supabase CLI (estado local)
+supabase/.branches
+supabase/.temp
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Vite
+*.tsbuildinfo

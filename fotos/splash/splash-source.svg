@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" width="1080" height="1920">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="75%">
+      <stop offset="0" stop-color="#1F1533"/>
+      <stop offset="55%" stop-color="#161022"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </radialGradient>
+    <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7C3AED"/>
+      <stop offset="1" stop-color="#4F46E5"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1080" height="1920" fill="url(#bg)"/>
+
+  <g transform="translate(284, 604)">
+    <g stroke="#7C3AED" stroke-opacity="0.25" stroke-width="4" fill="none">
+      <circle cx="256" cy="256" r="200"/>
+      <circle cx="256" cy="256" r="140"/>
+      <line x1="256" y1="56" x2="256" y2="456"/>
+      <line x1="56" y1="256" x2="456" y2="256"/>
+      <line x1="115" y1="115" x2="397" y2="397"/>
+      <line x1="397" y1="115" x2="115" y2="397"/>
+    </g>
+    <g stroke="url(#grad)" stroke-width="18" stroke-linecap="round" fill="none">
+      <path d="M212 200 L140 140 L96 96"/>
+      <path d="M204 240 L118 218 L64 200"/>
+      <path d="M204 288 L118 310 L64 330"/>
+      <path d="M212 328 L146 386 L104 428"/>
+      <path d="M300 200 L372 140 L416 96"/>
+      <path d="M308 240 L394 218 L448 200"/>
+      <path d="M308 288 L394 310 L448 330"/>
+      <path d="M300 328 L366 386 L408 428"/>
+    </g>
+    <circle cx="256" cy="212" r="46" fill="url(#grad)"/>
+    <ellipse cx="256" cy="312" rx="62" ry="76" fill="url(#grad)"/>
+    <text x="256" y="336" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="800" fill="#FAFAFA">$</text>
+    <circle cx="240" cy="204" r="8" fill="#FAFAFA"/>
+    <circle cx="272" cy="204" r="8" fill="#FAFAFA"/>
+  </g>
+
+  <text x="540" y="1310" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="800" fill="#FAFAFA">Spider<tspan fill="#A78BFA">POS</tspan></text>
+  <text x="540" y="1368" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="500" fill="#9CA3AF">La telaraña que conecta todo tu negocio</text>
+</svg>
