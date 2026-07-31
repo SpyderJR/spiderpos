@@ -1296,12 +1296,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adjust_stock: {
+        Args: { p_new_stock: number; p_product_id: string; p_reason: string }
+        Returns: undefined
+      }
       auth_has_permission: { Args: { perm: string }; Returns: boolean }
       auth_role: {
         Args: never
         Returns: Database['public']['Enums']['store_role']
       }
       auth_store_id: { Args: never; Returns: string }
+      receive_purchase_order: {
+        Args: { p_purchase_order_id: string }
+        Returns: Json
+      }
       record_sale: {
         Args: {
           p_client_created_at: string

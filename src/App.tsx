@@ -26,6 +26,9 @@ const POSPage = lazy(() => import('./features/pos/POSPage').then((m) => ({ defau
 const SalesHistoryPage = lazy(() =>
   import('./features/receipts/SalesHistoryPage').then((m) => ({ default: m.SalesHistoryPage })),
 )
+const InventoryPage = lazy(() =>
+  import('./features/inventory/InventoryPage').then((m) => ({ default: m.InventoryPage })),
+)
 
 function RouteFallback() {
   return (
@@ -52,6 +55,7 @@ function App() {
               <Route index element={<Navigate to="venta" replace />} />
               <Route path="venta" element={<POSPage />} />
               <Route path="ventas" element={<SalesHistoryPage />} />
+              <Route path="inventario" element={<InventoryPage />} />
               <Route path="perfil" element={<BusinessProfilePage />} />
               <Route path="personal" element={<StaffPage />} />
             </Route>
