@@ -180,7 +180,8 @@ export function BusinessProfilePage() {
           <TextField
             label="CLABE interbancaria (payouts)"
             inputMode="numeric"
-            error={errors.payout_clabe?.message}
+            disabled={store?.is_demo}
+            error={store?.is_demo ? 'No disponible en modo demo' : errors.payout_clabe?.message}
             {...register('payout_clabe')}
           />
 

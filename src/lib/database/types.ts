@@ -397,6 +397,24 @@ export type Database = {
           },
         ]
       }
+      demo_leads: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       pending_signups: {
         Row: {
           business_name: string
@@ -1248,6 +1266,7 @@ export type Database = {
           created_at: string
           footer_message: string | null
           id: string
+          is_demo: boolean
           logo_url: string | null
           name: string
           payout_clabe: string | null
@@ -1265,6 +1284,7 @@ export type Database = {
           created_at?: string
           footer_message?: string | null
           id?: string
+          is_demo?: boolean
           logo_url?: string | null
           name: string
           payout_clabe?: string | null
@@ -1282,6 +1302,7 @@ export type Database = {
           created_at?: string
           footer_message?: string | null
           id?: string
+          is_demo?: boolean
           logo_url?: string | null
           name?: string
           payout_clabe?: string | null
@@ -1532,6 +1553,7 @@ export type Database = {
         }
         Returns: Json
       }
+      reset_demo_store: { Args: { p_store_id: string }; Returns: undefined }
       return_sale_items: {
         Args: { p_items: Json; p_reason: string; p_sale_id: string }
         Returns: Json

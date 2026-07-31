@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Logo } from '../../components/Logo'
+import { DemoEntryModal } from './DemoEntryModal'
 
 const FEATURES = [
   {
@@ -48,6 +50,8 @@ const PLANS = [
 ]
 
 export function LandingPage() {
+  const [demoOpen, setDemoOpen] = useState(false)
+
   return (
     <div className="bg-paper dark:bg-carbon-950 min-h-dvh">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-6">
@@ -79,14 +83,25 @@ export function LandingPage() {
             Vende, controla tu inventario, cobra fiados y saca tus cortes de caja — desde tu
             celular, tablet o PC. Sin hardware costoso, funciona hasta sin internet.
           </p>
-          <Link
-            to="/registro"
-            className="bg-brand-600 hover:bg-brand-700 rounded-xl px-8 py-3.5 text-base font-semibold text-white shadow-lg transition-colors"
-          >
-            Comenzar ahora
-          </Link>
+          <div className="flex flex-col items-center gap-3 sm:flex-row">
+            <Link
+              to="/registro"
+              className="bg-brand-600 hover:bg-brand-700 rounded-xl px-8 py-3.5 text-base font-semibold text-white shadow-lg transition-colors"
+            >
+              Comenzar ahora
+            </Link>
+            <button
+              type="button"
+              onClick={() => setDemoOpen(true)}
+              className="border-brand-600 text-brand-700 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-950/40 rounded-xl border-2 bg-transparent px-8 py-3 text-base font-semibold transition-colors"
+            >
+              Probar demo gratis
+            </button>
+          </div>
           <p className="text-carbon-400 text-xs">Configura tu tienda en menos de 10 minutos</p>
         </motion.section>
+
+        <DemoEntryModal open={demoOpen} onClose={() => setDemoOpen(false)} />
 
         <section className="grid grid-cols-1 gap-4 py-8 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f) => (
@@ -110,7 +125,7 @@ export function LandingPage() {
                 key={plan.id}
                 className={`rounded-2xl border p-6 ${
                   plan.highlight
-                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/30 relative'
+                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/50 relative'
                     : 'dark:bg-carbon-900 border-carbon-100 dark:border-carbon-800 bg-white'
                 }`}
               >

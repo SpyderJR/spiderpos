@@ -18,6 +18,7 @@ export function StaffPage() {
   const storeId = currentMember?.store_id
   const canManage = currentMember?.role === 'owner' || currentMember?.role === 'manager'
   const isOwner = currentMember?.role === 'owner'
+  const isDemo = currentMember?.stores?.is_demo
 
   const queryClient = useQueryClient()
   const [createOpen, setCreateOpen] = useState(false)
@@ -53,8 +54,13 @@ export function StaffPage() {
     <div className="mx-auto flex max-w-2xl flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-carbon-900 dark:text-paper text-2xl font-bold">Personal</h1>
-        {canManage && <Button onClick={() => setCreateOpen(true)}>+ Empleado</Button>}
+        {canManage && !isDemo && <Button onClick={() => setCreateOpen(true)}>+ Empleado</Button>}
       </div>
+      {isDemo && (
+        <p className="text-carbon-400 text-sm">
+          Alta de personal no disponible en modo demo — regístrate para tu propia tienda.
+        </p>
+      )}
 
       {staffQuery.isLoading && <p className="text-carbon-500 dark:text-carbon-400">Cargando...</p>}
 

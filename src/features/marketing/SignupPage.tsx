@@ -8,6 +8,7 @@ import { Logo } from '../../components/Logo'
 import { TextField } from '../../components/ui/TextField'
 import { Button } from '../../components/ui/Button'
 import { createCheckout } from './api'
+import { DemoEntryModal } from './DemoEntryModal'
 
 const BUSINESS_TYPES = [
   { value: 'abarrotes', label: 'Abarrotes / tienda de conveniencia' },
@@ -19,7 +20,6 @@ const BUSINESS_TYPES = [
 const schema = z.object({
   business_name: z.string().trim().min(2, 'Ingresa el nombre de tu negocio'),
   business_type: z.enum(['abarrotes', 'papeleria', 'farmacia', 'ferreteria']),
-  owner_full_name: z.string().trim().min(2, 'Ingresa tu nombre completo'),
   owner_email: z.email('Ingresa un correo válido'),
   plan: z.enum(['monthly', 'annual']),
 })
@@ -30,6 +30,7 @@ export function SignupPage() {
   const [searchParams] = useSearchParams()
   const initialPlan = searchParams.get('plan') === 'annual' ? 'annual' : 'monthly'
   const [serverError, setServerError] = useState<string | null>(null)
+  const [demoOpen, setDemoOpen] = useState(false)
 
   const {
     register,
@@ -46,7 +47,10 @@ export function SignupPage() {
   async function onSubmit(values: FormValues) {
     setServerError(null)
     try {
-      const { checkout_url } = await createCheckout(values)
+      const { checkout_url } = await createCheckout({
+        ...values,
+        owner_full_name: values.owner_email.split('@')[0] || 'Dueño',
+      })
       window.location.assign(checkout_url)
     } catch (err) {
       setServerError(err instanceof Error ? err.message : 'No se pudo iniciar el registro')
@@ -65,7 +69,8 @@ export function SignupPage() {
           <Logo className="h-14 w-14" />
           <h1 className="text-carbon-900 dark:text-paper text-xl font-bold">Registra tu negocio</h1>
           <p className="text-carbon-500 dark:text-carbon-400 text-sm">
-            Configura tu tienda en minutos. Pagas y tu panel queda listo al instante.
+            Nombre, giro, correo y listo — el resto (logo, personal, datos fiscales) lo configuras
+            después, adentro.
           </p>
         </div>
 
@@ -94,12 +99,6 @@ export function SignupPage() {
           </div>
 
           <TextField
-            label="Tu nombre completo"
-            placeholder="Rosa Martínez"
-            error={errors.owner_full_name?.message}
-            {...register('owner_full_name')}
-          />
-          <TextField
             label="Tu correo electrónico"
             type="email"
             placeholder="rosa@ejemplo.com"
@@ -115,7 +114,7 @@ export function SignupPage() {
               <label
                 className={`cursor-pointer rounded-xl border p-3 text-center text-sm transition-colors ${
                   plan === 'monthly'
-                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/30'
+                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/50'
                     : 'border-carbon-200 dark:border-carbon-700'
                 }`}
               >
@@ -127,7 +126,7 @@ export function SignupPage() {
               <label
                 className={`cursor-pointer rounded-xl border p-3 text-center text-sm transition-colors ${
                   plan === 'annual'
-                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/30'
+                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/50'
                     : 'border-carbon-200 dark:border-carbon-700'
                 }`}
               >
@@ -150,12 +149,22 @@ export function SignupPage() {
           </Button>
         </form>
 
+        <button
+          type="button"
+          onClick={() => setDemoOpen(true)}
+          className="border-carbon-200 text-carbon-600 hover:bg-carbon-50 dark:border-carbon-700 dark:text-carbon-300 dark:hover:bg-carbon-800 mt-4 w-full rounded-xl border py-2.5 text-sm font-medium transition-colors"
+        >
+          O prueba la demo gratis sin registrarte
+        </button>
+
         <p className="text-carbon-400 mt-6 text-center text-xs">
           <Link to="/" className="hover:underline">
             ← Volver
           </Link>
         </p>
       </motion.div>
+
+      <DemoEntryModal open={demoOpen} onClose={() => setDemoOpen(false)} />
     </div>
   )
 }

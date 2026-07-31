@@ -433,3 +433,7 @@ verify_jwt = false
 # Público: sondeado desde la página de retorno del checkout, antes de
 # que exista sesión.
 verify_jwt = false
+
+[functions.demo-login]
+# Público: cualquier visitante puede entrar al modo demo sin cuenta.
+verify_jwt = false
