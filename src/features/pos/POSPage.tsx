@@ -13,6 +13,10 @@ import { ParkedSalesDrawer } from './ParkedSalesDrawer'
 import { Modal } from '../../components/ui/Modal'
 import { checkoutSale, type PaymentInput } from './api'
 import { playScanBeep, playChaChing, playErrorTone, vibrate } from './sensoryFeedback'
+import { fetchReceiptData } from '../receipts/api'
+import { ReceiptActions } from '../receipts/ReceiptActions'
+import { PrinterSettingsModal } from '../receipts/PrinterSettingsModal'
+import type { ReceiptData } from '../receipts/types'
 
 // La librería de escaneo (ZXing, con fallback para navegadores sin
 // BarcodeDetector nativo) pesa bastante — se carga solo al abrir la cámara.
@@ -44,6 +48,8 @@ export function POSPage() {
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
   const [checkingOut, setCheckingOut] = useState(false)
   const [notFoundCode, setNotFoundCode] = useState<string | null>(null)
+  const [completedReceipt, setCompletedReceipt] = useState<ReceiptData | null>(null)
+  const [printerSettingsOpen, setPrinterSettingsOpen] = useState(false)
 
   const canDiscountWithoutPin =
     member?.role === 'owner' ||
@@ -107,8 +113,9 @@ export function POSPage() {
     setCheckingOut(true)
     setCheckoutError(null)
     try {
+      const saleId = crypto.randomUUID()
       await checkoutSale({
-        saleId: crypto.randomUUID(),
+        saleId,
         items,
         payments,
         customerId,
@@ -121,6 +128,11 @@ export function POSPage() {
       setPaymentOpen(false)
       setCartOpenMobile(false)
       resync()
+      fetchReceiptData(saleId)
+        .then((data) => setCompletedReceipt(data))
+        .catch(() => {
+          /* la venta ya quedó registrada; solo falló mostrar el ticket */
+        })
     } catch (err) {
       playErrorTone()
       setCheckoutError(err instanceof Error ? err.message : 'No se pudo registrar la venta')
@@ -158,6 +170,14 @@ export function POSPage() {
             className="bg-carbon-100 text-carbon-700 dark:bg-carbon-800 dark:text-carbon-200 flex min-h-11 min-w-11 items-center justify-center rounded-xl text-xl"
           >
             🅿️
+          </button>
+          <button
+            type="button"
+            onClick={() => setPrinterSettingsOpen(true)}
+            aria-label="Configurar impresora"
+            className="bg-carbon-100 text-carbon-700 dark:bg-carbon-800 dark:text-carbon-200 flex min-h-11 min-w-11 items-center justify-center rounded-xl text-xl"
+          >
+            🖨️
           </button>
         </div>
 
@@ -258,6 +278,26 @@ export function POSPage() {
           </p>
         </Modal>
       )}
+
+      <Modal
+        open={!!completedReceipt}
+        onClose={() => setCompletedReceipt(null)}
+        title="Venta completada ✅"
+      >
+        {completedReceipt && (
+          <div className="flex flex-col gap-4">
+            <p className="text-carbon-900 dark:text-paper text-center text-2xl font-bold">
+              ${completedReceipt.total.toFixed(2)}
+            </p>
+            <ReceiptActions data={completedReceipt} />
+          </div>
+        )}
+      </Modal>
+
+      <PrinterSettingsModal
+        open={printerSettingsOpen}
+        onClose={() => setPrinterSettingsOpen(false)}
+      />
     </div>
   )
 }
