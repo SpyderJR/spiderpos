@@ -1306,6 +1306,11 @@ export type Database = {
         Returns: Database['public']['Enums']['store_role']
       }
       auth_store_id: { Args: never; Returns: string }
+      close_cash_shift: {
+        Args: { p_cash_shift_id: string; p_counted_amount: number }
+        Returns: Json
+      }
+      open_cash_shift: { Args: { p_opening_amount: number }; Returns: string }
       receive_purchase_order: {
         Args: { p_purchase_order_id: string }
         Returns: Json

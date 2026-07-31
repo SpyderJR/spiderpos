@@ -32,6 +32,12 @@ const InventoryPage = lazy(() =>
 const CustomersPage = lazy(() =>
   import('./features/customers/CustomersPage').then((m) => ({ default: m.CustomersPage })),
 )
+const CashRegisterPage = lazy(() =>
+  import('./features/cashregister/CashRegisterPage').then((m) => ({ default: m.CashRegisterPage })),
+)
+const ReportsPage = lazy(() =>
+  import('./features/reports/ReportsPage').then((m) => ({ default: m.ReportsPage })),
+)
 
 function RouteFallback() {
   return (
@@ -60,6 +66,8 @@ function App() {
               <Route path="ventas" element={<SalesHistoryPage />} />
               <Route path="inventario" element={<InventoryPage />} />
               <Route path="clientes" element={<CustomersPage />} />
+              <Route path="caja" element={<CashRegisterPage />} />
+              <Route path="reportes" element={<ReportsPage />} />
               <Route path="perfil" element={<BusinessProfilePage />} />
               <Route path="personal" element={<StaffPage />} />
             </Route>

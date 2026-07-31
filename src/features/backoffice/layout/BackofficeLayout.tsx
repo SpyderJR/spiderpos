@@ -1,21 +1,33 @@
+import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { Logo } from '../../../components/Logo'
 import { ConnectionStatus } from '../../../components/ConnectionStatus'
 import { ThemeToggle } from '../../../components/ThemeToggle'
+import { Modal } from '../../../components/ui/Modal'
 import { useCurrentMember } from '../../auth/useCurrentMember'
 import { signOut } from '../../auth/api'
 
-const NAV_ITEMS = [
+// La barra inferior móvil solo alcanza para ~5 accesos directos; el resto
+// vive detrás de "Más". El sidebar de escritorio muestra todo siempre.
+const PRIMARY_NAV = [
   { to: '/backoffice/venta', label: 'Venta', icon: '🛒' },
-  { to: '/backoffice/ventas', label: 'Ventas', icon: '🧾' },
+  { to: '/backoffice/caja', label: 'Caja', icon: '💵' },
   { to: '/backoffice/inventario', label: 'Inventario', icon: '📦' },
   { to: '/backoffice/clientes', label: 'Clientes', icon: '🧑‍🤝‍🧑' },
+]
+
+const SECONDARY_NAV = [
+  { to: '/backoffice/ventas', label: 'Ventas', icon: '🧾' },
+  { to: '/backoffice/reportes', label: 'Reportes', icon: '📊' },
   { to: '/backoffice/perfil', label: 'Perfil', icon: '🏪' },
   { to: '/backoffice/personal', label: 'Personal', icon: '👥' },
 ]
 
+const ALL_NAV = [...PRIMARY_NAV, ...SECONDARY_NAV]
+
 export function BackofficeLayout() {
   const { data: member } = useCurrentMember()
+  const [moreOpen, setMoreOpen] = useState(false)
 
   return (
     <div className="bg-paper dark:bg-carbon-950 flex min-h-dvh flex-col md:flex-row">
@@ -27,7 +39,7 @@ export function BackofficeLayout() {
           </span>
         </div>
         <nav className="mt-6 flex flex-col gap-1">
-          {NAV_ITEMS.map((item) => (
+          {ALL_NAV.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -81,7 +93,7 @@ export function BackofficeLayout() {
         </main>
 
         <nav className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 fixed inset-x-0 bottom-0 z-10 flex border-t bg-white md:hidden">
-          {NAV_ITEMS.map((item) => (
+          {PRIMARY_NAV.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -99,8 +111,36 @@ export function BackofficeLayout() {
               {item.label}
             </NavLink>
           ))}
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            className="text-carbon-500 dark:text-carbon-400 flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs font-medium"
+          >
+            <span className="text-lg" aria-hidden="true">
+              ⋯
+            </span>
+            Más
+          </button>
         </nav>
       </div>
+
+      <Modal open={moreOpen} onClose={() => setMoreOpen(false)} title="Más opciones">
+        <div className="grid grid-cols-2 gap-2">
+          {SECONDARY_NAV.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={() => setMoreOpen(false)}
+              className="border-carbon-200 text-carbon-700 hover:bg-carbon-50 dark:border-carbon-700 dark:text-carbon-200 dark:hover:bg-carbon-800 flex flex-col items-center gap-1 rounded-xl border p-4 text-sm font-medium"
+            >
+              <span className="text-2xl" aria-hidden="true">
+                {item.icon}
+              </span>
+              {item.label}
+            </NavLink>
+          ))}
+        </div>
+      </Modal>
     </div>
   )
 }
