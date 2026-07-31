@@ -203,4 +203,66 @@ describe('Aislamiento multi-tenant (RLS)', () => {
     expect(updateErr).toBeNull()
     expect(updateResult).toEqual([])
   })
+
+  it('la tienda A no ve el historial de pagos de suscripción de la tienda B (Fase 9)', async () => {
+    const { data: subB } = await admin
+      .from('subscriptions')
+      .insert({
+        store_id: tenantB.storeId,
+        provider: 'mercadopago',
+        status: 'active',
+        plan: 'monthly',
+      })
+      .select('id')
+      .single()
+    const { error: payErr } = await admin.from('subscription_payments').insert({
+      subscription_id: subB!.id,
+      store_id: tenantB.storeId,
+      provider_payment_id: `rls-test-${runId}`,
+      amount: 149.99,
+      status: 'approved',
+    })
+    expect(payErr).toBeNull()
+
+    const { data: crossTenantRead, error: readErr } = await tenantA.client
+      .from('subscription_payments')
+      .select('*')
+      .eq('store_id', tenantB.storeId)
+    expect(readErr).toBeNull()
+    expect(crossTenantRead).toEqual([])
+
+    const { data: ownRead } = await tenantB.client
+      .from('subscription_payments')
+      .select('*')
+      .eq('store_id', tenantB.storeId)
+    expect(ownRead!.length).toBe(1)
+  })
+
+  it('pending_signups y webhook_events son invisibles para cualquier cliente autenticado (solo service_role)', async () => {
+    const { data: signupData, error: signupErr } = await tenantA.client
+      .from('pending_signups')
+      .select('*')
+    expect(signupErr).toBeNull()
+    expect(signupData).toEqual([])
+
+    const { data: webhookData, error: webhookErr } = await tenantA.client
+      .from('webhook_events')
+      .select('*')
+    expect(webhookErr).toBeNull()
+    expect(webhookData).toEqual([])
+  })
+
+  it('un dueño de tienda normal no puede leer platform_admins ni invocar get_platform_metrics', async () => {
+    const { data: adminRows, error: adminErr } = await tenantA.client
+      .from('platform_admins')
+      .select('*')
+    expect(adminErr).toBeNull()
+    expect(adminRows).toEqual([])
+
+    const { data: isAdmin } = await tenantA.client.rpc('is_platform_admin')
+    expect(isAdmin).toBe(false)
+
+    const { error: metricsErr } = await tenantA.client.rpc('get_platform_metrics')
+    expect(metricsErr).not.toBeNull()
+  })
 })

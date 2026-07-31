@@ -7,7 +7,23 @@ import { useDeviceStore } from './store/useDeviceStore'
 import App from './App'
 
 describe('App', () => {
-  it('redirects an unauthenticated visitor with no device binding to the owner login', async () => {
+  it('shows the public landing page to an unauthenticated visitor with no device binding', async () => {
+    window.history.pushState({}, '', '/')
+    useAuthStore.setState({ session: null, initialized: true })
+    useDeviceStore.setState({ boundStoreId: null })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByRole('link', { name: /comenzar ahora/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /ya tengo cuenta/i })).toBeInTheDocument()
+  })
+
+  it('shows the owner login form at /login', async () => {
+    window.history.pushState({}, '', '/login')
     useAuthStore.setState({ session: null, initialized: true })
     useDeviceStore.setState({ boundStoreId: null })
 

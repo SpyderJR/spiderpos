@@ -376,6 +376,56 @@ export type Database = {
           },
         ]
       }
+      pending_signups: {
+        Row: {
+          business_name: string
+          business_type: Database['public']['Enums']['store_business_type']
+          created_at: string
+          id: string
+          owner_email: string
+          owner_full_name: string
+          plan: Database['public']['Enums']['subscription_plan']
+          provider_sub_id: string | null
+          provisioned_at: string | null
+          status: Database['public']['Enums']['signup_status']
+          store_id: string | null
+        }
+        Insert: {
+          business_name: string
+          business_type: Database['public']['Enums']['store_business_type']
+          created_at?: string
+          id?: string
+          owner_email: string
+          owner_full_name: string
+          plan: Database['public']['Enums']['subscription_plan']
+          provider_sub_id?: string | null
+          provisioned_at?: string | null
+          status?: Database['public']['Enums']['signup_status']
+          store_id?: string | null
+        }
+        Update: {
+          business_name?: string
+          business_type?: Database['public']['Enums']['store_business_type']
+          created_at?: string
+          id?: string
+          owner_email?: string
+          owner_full_name?: string
+          plan?: Database['public']['Enums']['subscription_plan']
+          provider_sub_id?: string | null
+          provisioned_at?: string | null
+          status?: Database['public']['Enums']['signup_status']
+          store_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'pending_signups_store_id_fkey'
+            columns: ['store_id']
+            isOneToOne: false
+            referencedRelation: 'stores'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       pin_login_attempts: {
         Row: {
           attempts: number
@@ -404,6 +454,24 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
+      }
+      platform_admins: {
+        Row: {
+          created_at: string
+          full_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       product_variants: {
         Row: {
@@ -1206,6 +1274,54 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          paid_at: string | null
+          provider_payment_id: string
+          status: Database['public']['Enums']['payment_status']
+          store_id: string
+          subscription_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          provider_payment_id: string
+          status: Database['public']['Enums']['payment_status']
+          store_id: string
+          subscription_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          provider_payment_id?: string
+          status?: Database['public']['Enums']['payment_status']
+          store_id?: string
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'subscription_payments_store_id_fkey'
+            columns: ['store_id']
+            isOneToOne: false
+            referencedRelation: 'stores'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'subscription_payments_subscription_id_fkey'
+            columns: ['subscription_id']
+            isOneToOne: false
+            referencedRelation: 'subscriptions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -1291,6 +1407,30 @@ export type Database = {
           },
         ]
       }
+      webhook_events: {
+        Row: {
+          event_type: string
+          id: string
+          payload: Json
+          provider: Database['public']['Enums']['webhook_provider']
+          received_at: string
+        }
+        Insert: {
+          event_type: string
+          id: string
+          payload?: Json
+          provider: Database['public']['Enums']['webhook_provider']
+          received_at?: string
+        }
+        Update: {
+          event_type?: string
+          id?: string
+          payload?: Json
+          provider?: Database['public']['Enums']['webhook_provider']
+          received_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1322,8 +1462,30 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_platform_metrics: { Args: never; Returns: Json }
       hash_pin: { Args: { p_pin: string }; Returns: string }
+      is_platform_admin: { Args: never; Returns: boolean }
+      list_platform_tenants: {
+        Args: never
+        Returns: {
+          business_type: Database['public']['Enums']['store_business_type']
+          created_at: string
+          current_period_end: string
+          name: string
+          owner_email: string
+          plan: Database['public']['Enums']['subscription_plan']
+          store_id: string
+          subscription_status: Database['public']['Enums']['subscription_status']
+        }[]
+      }
       open_cash_shift: { Args: { p_opening_amount: number }; Returns: string }
+      platform_set_store_status: {
+        Args: {
+          p_status: Database['public']['Enums']['subscription_status']
+          p_store_id: string
+        }
+        Returns: undefined
+      }
       receive_purchase_order: {
         Args: { p_purchase_order_id: string }
         Returns: Json
@@ -1359,18 +1521,21 @@ export type Database = {
     Enums: {
       cash_movement_type: 'in' | 'out'
       cash_shift_status: 'open' | 'closed'
+      payment_status: 'approved' | 'rejected' | 'pending' | 'refunded'
       product_unit_type: 'piece' | 'kg' | 'g' | 'lt' | 'm'
       promotion_type: 'percentage' | 'fixed' | '2x1' | '3x2' | 'bulk_price'
       purchase_order_status: 'draft' | 'ordered' | 'received' | 'cancelled'
       recharge_status: 'pending' | 'completed' | 'failed'
       sale_payment_method: 'cash' | 'card' | 'transfer' | 'credit'
       sale_status: 'completed' | 'parked' | 'cancelled' | 'returned' | 'partially_returned'
+      signup_status: 'pending' | 'provisioned' | 'expired'
       stock_movement_type: 'sale' | 'purchase' | 'adjustment' | 'return' | 'initial'
       store_business_type: 'abarrotes' | 'papeleria' | 'farmacia' | 'ferreteria'
       store_role: 'owner' | 'manager' | 'cashier'
       subscription_plan: 'monthly' | 'annual'
       subscription_provider: 'stripe' | 'mercadopago'
       subscription_status: 'trialing' | 'active' | 'past_due' | 'suspended' | 'cancelled'
+      webhook_provider: 'mercadopago'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1497,18 +1662,21 @@ export const Constants = {
     Enums: {
       cash_movement_type: ['in', 'out'],
       cash_shift_status: ['open', 'closed'],
+      payment_status: ['approved', 'rejected', 'pending', 'refunded'],
       product_unit_type: ['piece', 'kg', 'g', 'lt', 'm'],
       promotion_type: ['percentage', 'fixed', '2x1', '3x2', 'bulk_price'],
       purchase_order_status: ['draft', 'ordered', 'received', 'cancelled'],
       recharge_status: ['pending', 'completed', 'failed'],
       sale_payment_method: ['cash', 'card', 'transfer', 'credit'],
       sale_status: ['completed', 'parked', 'cancelled', 'returned', 'partially_returned'],
+      signup_status: ['pending', 'provisioned', 'expired'],
       stock_movement_type: ['sale', 'purchase', 'adjustment', 'return', 'initial'],
       store_business_type: ['abarrotes', 'papeleria', 'farmacia', 'ferreteria'],
       store_role: ['owner', 'manager', 'cashier'],
       subscription_plan: ['monthly', 'annual'],
       subscription_provider: ['stripe', 'mercadopago'],
       subscription_status: ['trialing', 'active', 'past_due', 'suspended', 'cancelled'],
+      webhook_provider: ['mercadopago'],
     },
   },
 } as const

@@ -32,7 +32,7 @@ export function LoginPage() {
     setServerError(null)
     try {
       await signInOwner(values.email, values.password)
-      navigate('/backoffice', { replace: true })
+      navigate('/', { replace: true })
     } catch (err) {
       setServerError(err instanceof Error ? err.message : 'No se pudo iniciar sesión')
     }

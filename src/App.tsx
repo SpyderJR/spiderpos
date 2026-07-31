@@ -44,6 +44,33 @@ const PromotionsPage = lazy(() =>
 const AuditLogPage = lazy(() =>
   import('./features/audit/AuditLogPage').then((m) => ({ default: m.AuditLogPage })),
 )
+const SubscriptionPage = lazy(() =>
+  import('./features/subscription/SubscriptionPage').then((m) => ({
+    default: m.SubscriptionPage,
+  })),
+)
+const SignupPage = lazy(() =>
+  import('./features/marketing/SignupPage').then((m) => ({ default: m.SignupPage })),
+)
+const CheckoutReturnPage = lazy(() =>
+  import('./features/marketing/CheckoutReturnPage').then((m) => ({
+    default: m.CheckoutReturnPage,
+  })),
+)
+const AdminProtectedRoute = lazy(() =>
+  import('./features/admin/AdminProtectedRoute').then((m) => ({
+    default: m.AdminProtectedRoute,
+  })),
+)
+const AdminLayout = lazy(() =>
+  import('./features/admin/AdminLayout').then((m) => ({ default: m.AdminLayout })),
+)
+const AdminDashboardPage = lazy(() =>
+  import('./features/admin/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })),
+)
+const AdminTenantsPage = lazy(() =>
+  import('./features/admin/AdminTenantsPage').then((m) => ({ default: m.AdminTenantsPage })),
+)
 
 function RouteFallback() {
   return (
@@ -64,6 +91,8 @@ function App() {
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/pin" element={<PinLoginPage />} />
+          <Route path="/registro" element={<SignupPage />} />
+          <Route path="/checkout/return" element={<CheckoutReturnPage />} />
 
           <Route element={<ProtectedRoute />}>
             <Route path="/backoffice" element={<BackofficeLayout />}>
@@ -76,8 +105,16 @@ function App() {
               <Route path="reportes" element={<ReportsPage />} />
               <Route path="promociones" element={<PromotionsPage />} />
               <Route path="auditoria" element={<AuditLogPage />} />
+              <Route path="suscripcion" element={<SubscriptionPage />} />
               <Route path="perfil" element={<BusinessProfilePage />} />
               <Route path="personal" element={<StaffPage />} />
+            </Route>
+          </Route>
+
+          <Route element={<AdminProtectedRoute />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboardPage />} />
+              <Route path="tenants" element={<AdminTenantsPage />} />
             </Route>
           </Route>
 

@@ -4,6 +4,9 @@ import { useAuthStore } from '../../store/useAuthStore'
 import { useDeviceStore } from '../../store/useDeviceStore'
 import { useCurrentMember } from './useCurrentMember'
 import { signOut } from './api'
+import { Paywall } from '../subscription/Paywall'
+
+const BLOCKED_STATUSES = new Set(['past_due', 'suspended', 'cancelled'])
 
 export function ProtectedRoute() {
   const session = useAuthStore((state) => state.session)
@@ -48,6 +51,11 @@ export function ProtectedRoute() {
         </button>
       </div>
     )
+  }
+
+  const subscriptionStatus = memberQuery.data.stores?.subscription_status
+  if (subscriptionStatus && BLOCKED_STATUSES.has(subscriptionStatus)) {
+    return <Paywall status={subscriptionStatus} canManage={memberQuery.data.role === 'owner'} />
   }
 
   return <Outlet />

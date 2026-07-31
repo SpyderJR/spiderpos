@@ -21,6 +21,7 @@ const SECONDARY_NAV = [
   { to: '/backoffice/reportes', label: 'Reportes', icon: '📊' },
   { to: '/backoffice/promociones', label: 'Promociones', icon: '🏷️' },
   { to: '/backoffice/auditoria', label: 'Auditoría', icon: '🕵️' },
+  { to: '/backoffice/suscripcion', label: 'Suscripción', icon: '💳' },
   { to: '/backoffice/perfil', label: 'Perfil', icon: '🏪' },
   { to: '/backoffice/personal', label: 'Personal', icon: '👥' },
 ]

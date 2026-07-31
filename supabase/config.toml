@@ -416,5 +416,20 @@ enabled = true
 [functions.pin-login]
 # Endpoint público: se llama ANTES de que exista sesión (el cajero aún no
 # se ha autenticado), por eso no puede exigir un JWT de usuario. La función
-# hace su propia validación (rate limit + comparación de PIN con bcrypt).
+# hace su propia validación (rate limit + comparación de PIN vía pgcrypto).
+verify_jwt = false
+
+[functions.create-checkout]
+# Público: el visitante todavía no tiene cuenta (Fase 9, PRD 4.2).
+verify_jwt = false
+
+[functions.mercadopago-webhook]
+# Público: lo llaman los servidores de Mercado Pago, sin JWT de Supabase.
+# La función valida su propia firma HMAC (x-signature) cuando
+# MERCADOPAGO_WEBHOOK_SECRET está configurado.
+verify_jwt = false
+
+[functions.check-signup-status]
+# Público: sondeado desde la página de retorno del checkout, antes de
+# que exista sesión.
 verify_jwt = false
