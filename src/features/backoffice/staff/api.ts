@@ -1,4 +1,3 @@
-import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { supabase } from '../../../lib/supabase'
 import { env } from '../../../lib/env'
@@ -77,7 +76,8 @@ export async function updateStaffMember(
 }
 
 export async function resetStaffPin(id: string, pin: string) {
-  const pinHash = bcrypt.hashSync(pin, 10)
+  const { data: pinHash, error: hashError } = await supabase.rpc('hash_pin', { p_pin: pin })
+  if (hashError) throw hashError
   const { error } = await supabase.from('store_members').update({ pin_hash: pinHash }).eq('id', id)
   if (error) throw error
 }

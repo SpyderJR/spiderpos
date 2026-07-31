@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useCartStore, useCartSubtotal, useCartTotal } from '../../store/useCartStore'
+import { useCartStore } from '../../store/useCartStore'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
 import { SupervisorPinModal } from './SupervisorPinModal'
 import { listCustomers } from '../customers/api'
+import { useCartPricing } from './useCartPricing'
 
 const UNIT_LABELS: Record<string, string> = { piece: 'pza', kg: 'kg', g: 'g', lt: 'lt', m: 'm' }
 
@@ -16,15 +17,13 @@ interface CartPanelProps {
 }
 
 export function CartPanel({ storeId, canDiscountWithoutPin, onCheckout, onPark }: CartPanelProps) {
-  const items = useCartStore((state) => state.items)
-  const discount = useCartStore((state) => state.discount)
   const customerId = useCartStore((state) => state.customerId)
   const setCustomerId = useCartStore((state) => state.setCustomerId)
   const updateQuantity = useCartStore((state) => state.updateQuantity)
   const removeItem = useCartStore((state) => state.removeItem)
   const setDiscount = useCartStore((state) => state.setDiscount)
-  const subtotal = useCartSubtotal()
-  const total = useCartTotal()
+  const { pricedItems, subtotal, promotionsDiscount, manualDiscount, total } =
+    useCartPricing(storeId)
 
   const [pinModalOpen, setPinModalOpen] = useState(false)
   const [discountInput, setDiscountInput] = useState(false)
@@ -71,11 +70,11 @@ export function CartPanel({ storeId, canDiscountWithoutPin, onCheckout, onPark }
         </div>
       </div>
       <div className="flex-1 overflow-y-auto">
-        {items.length === 0 ? (
+        {pricedItems.length === 0 ? (
           <p className="text-carbon-400 p-6 text-center text-sm">El carrito está vacío.</p>
         ) : (
           <ul className="divide-carbon-100 dark:divide-carbon-800 flex flex-col divide-y">
-            {items.map((item) => (
+            {pricedItems.map((item) => (
               <li
                 key={item.productId}
                 className="flex items-center justify-between gap-2 px-4 py-3"
@@ -87,6 +86,11 @@ export function CartPanel({ storeId, canDiscountWithoutPin, onCheckout, onPark }
                   <p className="text-carbon-500 dark:text-carbon-400 text-xs">
                     ${item.unitPrice.toFixed(2)} / {UNIT_LABELS[item.unitType]}
                   </p>
+                  {item.promotionName && (
+                    <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                      🏷️ {item.promotionName}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   {item.unitType === 'piece' ? (
@@ -115,7 +119,7 @@ export function CartPanel({ storeId, canDiscountWithoutPin, onCheckout, onPark }
                     </span>
                   )}
                   <span className="w-16 text-right text-sm font-semibold">
-                    ${(item.unitPrice * item.quantity - item.discount).toFixed(2)}
+                    ${item.computedSubtotal.toFixed(2)}
                   </span>
                   <button
                     type="button"
@@ -138,16 +142,25 @@ export function CartPanel({ storeId, canDiscountWithoutPin, onCheckout, onPark }
           <span>${subtotal.toFixed(2)}</span>
         </div>
 
+        {promotionsDiscount > 0 && (
+          <div className="flex items-center justify-between text-sm text-emerald-600 dark:text-emerald-400">
+            <span>Promociones</span>
+            <span>−${promotionsDiscount.toFixed(2)}</span>
+          </div>
+        )}
+
         <div className="flex items-center justify-between text-sm">
           <button
             type="button"
             onClick={requestDiscount}
             className="text-brand-600 dark:text-brand-400 hover:underline"
           >
-            {discount > 0 ? 'Editar descuento' : '+ Aplicar descuento'}
+            {manualDiscount > 0 ? 'Editar descuento' : '+ Aplicar descuento'}
           </button>
-          {discount > 0 && (
-            <span className="text-carbon-500 dark:text-carbon-400">−${discount.toFixed(2)}</span>
+          {manualDiscount > 0 && (
+            <span className="text-carbon-500 dark:text-carbon-400">
+              −${manualDiscount.toFixed(2)}
+            </span>
           )}
         </div>
 
@@ -156,7 +169,7 @@ export function CartPanel({ storeId, canDiscountWithoutPin, onCheckout, onPark }
             type="number"
             inputMode="decimal"
             autoFocus
-            defaultValue={discount || ''}
+            defaultValue={manualDiscount || ''}
             placeholder="Monto de descuento"
             onBlur={(e) => {
               setDiscount(Number.parseFloat(e.target.value) || 0)
@@ -176,12 +189,12 @@ export function CartPanel({ storeId, canDiscountWithoutPin, onCheckout, onPark }
           <Button
             variant="secondary"
             onClick={onPark}
-            disabled={items.length === 0}
+            disabled={pricedItems.length === 0}
             className="flex-1"
           >
             En espera
           </Button>
-          <Button onClick={onCheckout} disabled={items.length === 0} className="flex-[2]">
+          <Button onClick={onCheckout} disabled={pricedItems.length === 0} className="flex-[2]">
             Cobrar
           </Button>
         </div>

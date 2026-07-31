@@ -4,7 +4,8 @@ import { useCurrentMember } from '../auth/useCurrentMember'
 import { useProductSync } from './useProductSync'
 import { useProductSearch } from './useProductSearch'
 import { useHidScanner } from './useHidScanner'
-import { useCartStore, useCartTotal } from '../../store/useCartStore'
+import { useCartStore } from '../../store/useCartStore'
+import { useCartPricing } from './useCartPricing'
 import { db } from '../../lib/db'
 import type { LocalProduct } from '../../lib/db'
 import { BulkQuantityModal } from './BulkQuantityModal'
@@ -35,11 +36,10 @@ export function POSPage() {
   const { favorites, search, findByBarcode } = useProductSearch(storeId)
 
   const items = useCartStore((state) => state.items)
-  const discount = useCartStore((state) => state.discount)
   const customerId = useCartStore((state) => state.customerId)
   const addProduct = useCartStore((state) => state.addProduct)
   const clearCart = useCartStore((state) => state.clear)
-  const total = useCartTotal()
+  const { pricedItems, manualDiscount, total } = useCartPricing(storeId)
 
   const [query, setQuery] = useState('')
   const [scannerOpen, setScannerOpen] = useState(false)
@@ -118,10 +118,10 @@ export function POSPage() {
       const saleId = crypto.randomUUID()
       await checkoutSale({
         saleId,
-        items,
+        items: pricedItems.map((item) => ({ ...item, discount: item.computedDiscount })),
         payments,
         customerId,
-        discount,
+        discount: manualDiscount,
         clientCreatedAt: new Date().toISOString(),
       })
       playChaChing()

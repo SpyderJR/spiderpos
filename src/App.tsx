@@ -38,6 +38,12 @@ const CashRegisterPage = lazy(() =>
 const ReportsPage = lazy(() =>
   import('./features/reports/ReportsPage').then((m) => ({ default: m.ReportsPage })),
 )
+const PromotionsPage = lazy(() =>
+  import('./features/promotions/PromotionsPage').then((m) => ({ default: m.PromotionsPage })),
+)
+const AuditLogPage = lazy(() =>
+  import('./features/audit/AuditLogPage').then((m) => ({ default: m.AuditLogPage })),
+)
 
 function RouteFallback() {
   return (
@@ -68,6 +74,8 @@ function App() {
               <Route path="clientes" element={<CustomersPage />} />
               <Route path="caja" element={<CashRegisterPage />} />
               <Route path="reportes" element={<ReportsPage />} />
+              <Route path="promociones" element={<PromotionsPage />} />
+              <Route path="auditoria" element={<AuditLogPage />} />
               <Route path="perfil" element={<BusinessProfilePage />} />
               <Route path="personal" element={<StaffPage />} />
             </Route>

@@ -4,7 +4,6 @@
 // owner/manager de la tienda antes de crear nada.
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import bcrypt from 'npm:bcryptjs@3'
 import { z } from 'npm:zod@4'
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts'
 
@@ -75,7 +74,10 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: createErr?.message ?? 'No se pudo crear el usuario' }, 500)
   }
 
-  const pinHash = bcrypt.hashSync(pin, 10)
+  const { data: pinHash, error: hashErr } = await admin.rpc('hash_pin', { p_pin: pin })
+  if (hashErr || !pinHash) {
+    return jsonResponse({ error: 'No se pudo procesar el PIN' }, 500)
+  }
 
   const { data: member, error: memberErr } = await admin
     .from('store_members')

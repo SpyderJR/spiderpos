@@ -13,7 +13,6 @@
 // 15 minutos.
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import bcrypt from 'npm:bcryptjs@3'
 import { z } from 'npm:zod@4'
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts'
 
@@ -65,26 +64,17 @@ Deno.serve(async (req: Request) => {
   }
 
   // --- Buscar empleado activo con ese PIN dentro de la tienda ---
-  const { data: members, error: membersErr } = await admin
-    .from('store_members')
-    .select('id, user_id, pin_hash, full_name')
-    .eq('store_id', store_id)
-    .eq('active', true)
-    .not('pin_hash', 'is', null)
+  const { data: matches, error: matchErr } = await admin.rpc('find_member_by_pin', {
+    p_store_id: store_id,
+    p_pin: pin,
+  })
 
-  if (membersErr) {
+  if (matchErr) {
     return jsonResponse({ error: 'Error consultando la tienda' }, 500)
   }
 
-  let matchedUserId: string | null = null
-  let matchedName: string | null = null
-  for (const member of members ?? []) {
-    if (member.pin_hash && (await bcrypt.compare(pin, member.pin_hash))) {
-      matchedUserId = member.user_id
-      matchedName = member.full_name
-      break
-    }
-  }
+  const matchedUserId: string | null = matches?.[0]?.user_id ?? null
+  const matchedName: string | null = matches?.[0]?.full_name ?? null
 
   if (!matchedUserId) {
     const nextAttempts = (rateLimit?.attempts ?? 0) + 1

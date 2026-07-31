@@ -1306,10 +1306,23 @@ export type Database = {
         Returns: Database['public']['Enums']['store_role']
       }
       auth_store_id: { Args: never; Returns: string }
+      cancel_sale: {
+        Args: { p_reason: string; p_sale_id: string; p_supervisor_pin: string }
+        Returns: undefined
+      }
       close_cash_shift: {
         Args: { p_cash_shift_id: string; p_counted_amount: number }
         Returns: Json
       }
+      find_member_by_pin: {
+        Args: { p_pin: string; p_store_id: string }
+        Returns: {
+          full_name: string
+          member_id: string
+          user_id: string
+        }[]
+      }
+      hash_pin: { Args: { p_pin: string }; Returns: string }
       open_cash_shift: { Args: { p_opening_amount: number }; Returns: string }
       receive_purchase_order: {
         Args: { p_purchase_order_id: string }
@@ -1334,6 +1347,10 @@ export type Database = {
           p_payments: Json
           p_sale_id: string
         }
+        Returns: Json
+      }
+      return_sale_items: {
+        Args: { p_items: Json; p_reason: string; p_sale_id: string }
         Returns: Json
       }
       seed_store_catalog: { Args: { p_store_id: string }; Returns: undefined }

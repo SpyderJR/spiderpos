@@ -2,8 +2,11 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useCurrentMember } from '../auth/useCurrentMember'
 import { Modal } from '../../components/ui/Modal'
+import { Button } from '../../components/ui/Button'
 import { listSales, fetchReceiptData } from './api'
 import { ReceiptActions } from './ReceiptActions'
+import { ReturnDialog } from './ReturnDialog'
+import { CancelSaleDialog } from './CancelSaleDialog'
 import type { ReceiptData } from './types'
 
 const METHOD_LABELS: Record<string, string> = {
@@ -24,7 +27,13 @@ const STATUS_LABELS: Record<string, string> = {
 export function SalesHistoryPage() {
   const { data: member } = useCurrentMember()
   const storeId = member?.store_id
+  const canProcessReturns =
+    member?.role === 'owner' ||
+    member?.role === 'manager' ||
+    !!(member?.permissions as Record<string, boolean>)?.process_returns
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null)
+  const [returnSaleId, setReturnSaleId] = useState<string | null>(null)
+  const [cancelSaleId, setCancelSaleId] = useState<string | null>(null)
 
   const salesQuery = useQuery({
     queryKey: ['sales', storeId],
@@ -42,6 +51,10 @@ export function SalesHistoryPage() {
   })
 
   if (!storeId) return null
+
+  const activeSale = salesQuery.data?.find((s) => s.id === selectedSaleId)
+  const canModify =
+    activeSale && activeSale.status !== 'cancelled' && activeSale.status !== 'returned'
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4">
@@ -111,9 +124,49 @@ export function SalesHistoryPage() {
               </div>
             </div>
             <ReceiptActions data={receiptQuery.data} />
+
+            {canModify && canProcessReturns && (
+              <div className="border-carbon-100 dark:border-carbon-800 flex gap-2 border-t pt-4">
+                <Button
+                  variant="secondary"
+                  className="flex-1"
+                  onClick={() => {
+                    setReturnSaleId(selectedSaleId)
+                    setSelectedSaleId(null)
+                  }}
+                >
+                  Devolver
+                </Button>
+                <Button
+                  variant="danger"
+                  className="flex-1"
+                  onClick={() => {
+                    setCancelSaleId(selectedSaleId)
+                    setSelectedSaleId(null)
+                  }}
+                >
+                  Cancelar venta
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </Modal>
+
+      <ReturnDialog
+        saleId={returnSaleId}
+        onClose={() => {
+          setReturnSaleId(null)
+          setSelectedSaleId(null)
+        }}
+      />
+      <CancelSaleDialog
+        saleId={cancelSaleId}
+        onClose={() => {
+          setCancelSaleId(null)
+          setSelectedSaleId(null)
+        }}
+      />
     </div>
   )
 }

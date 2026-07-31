@@ -1,12 +1,12 @@
 import { supabase } from '../../lib/supabase'
-import { db, type LocalProduct } from '../../lib/db'
+import { db, type LocalProduct, type LocalPromotion } from '../../lib/db'
 import { normalizeText } from '../../lib/normalizeText'
 
 export async function syncProducts(storeId: string): Promise<number> {
   const { data, error } = await supabase
     .from('products')
     .select(
-      'id, store_id, barcode, name, price, cost, stock, unit_type, min_stock, is_favorite, image_url, active',
+      'id, store_id, category_id, barcode, name, price, cost, stock, unit_type, min_stock, is_favorite, image_url, active',
     )
     .eq('store_id', storeId)
     .eq('active', true)
@@ -16,6 +16,7 @@ export async function syncProducts(storeId: string): Promise<number> {
   const localProducts: LocalProduct[] = data.map((p) => ({
     id: p.id,
     storeId: p.store_id,
+    categoryId: p.category_id,
     barcode: p.barcode,
     name: p.name,
     price: p.price,
@@ -35,4 +36,37 @@ export async function syncProducts(storeId: string): Promise<number> {
   })
 
   return localProducts.length
+}
+
+export async function syncPromotions(storeId: string): Promise<number> {
+  const { data, error } = await supabase
+    .from('promotions')
+    .select(
+      'id, store_id, name, type, value, min_quantity, product_id, category_id, starts_at, ends_at, active',
+    )
+    .eq('store_id', storeId)
+    .eq('active', true)
+
+  if (error) throw error
+
+  const localPromotions: LocalPromotion[] = data.map((p) => ({
+    id: p.id,
+    storeId: p.store_id,
+    name: p.name,
+    type: p.type,
+    value: p.value,
+    minQuantity: p.min_quantity,
+    productId: p.product_id,
+    categoryId: p.category_id,
+    startsAt: p.starts_at,
+    endsAt: p.ends_at,
+    active: p.active,
+  }))
+
+  await db.transaction('rw', db.promotions, async () => {
+    await db.promotions.where('storeId').equals(storeId).delete()
+    await db.promotions.bulkAdd(localPromotions)
+  })
+
+  return localPromotions.length
 }
