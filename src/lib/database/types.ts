@@ -1310,6 +1310,15 @@ export type Database = {
         Args: { p_purchase_order_id: string }
         Returns: Json
       }
+      record_customer_payment: {
+        Args: {
+          p_amount: number
+          p_customer_id: string
+          p_method?: string
+          p_note?: string
+        }
+        Returns: Json
+      }
       record_sale: {
         Args: {
           p_client_created_at: string

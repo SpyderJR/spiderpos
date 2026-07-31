@@ -29,6 +29,9 @@ const SalesHistoryPage = lazy(() =>
 const InventoryPage = lazy(() =>
   import('./features/inventory/InventoryPage').then((m) => ({ default: m.InventoryPage })),
 )
+const CustomersPage = lazy(() =>
+  import('./features/customers/CustomersPage').then((m) => ({ default: m.CustomersPage })),
+)
 
 function RouteFallback() {
   return (
@@ -56,6 +59,7 @@ function App() {
               <Route path="venta" element={<POSPage />} />
               <Route path="ventas" element={<SalesHistoryPage />} />
               <Route path="inventario" element={<InventoryPage />} />
+              <Route path="clientes" element={<CustomersPage />} />
               <Route path="perfil" element={<BusinessProfilePage />} />
               <Route path="personal" element={<StaffPage />} />
             </Route>

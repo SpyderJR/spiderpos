@@ -1,19 +1,25 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useCartStore, useCartSubtotal, useCartTotal } from '../../store/useCartStore'
 import { Button } from '../../components/ui/Button'
+import { Modal } from '../../components/ui/Modal'
 import { SupervisorPinModal } from './SupervisorPinModal'
+import { listCustomers } from '../customers/api'
 
 const UNIT_LABELS: Record<string, string> = { piece: 'pza', kg: 'kg', g: 'g', lt: 'lt', m: 'm' }
 
 interface CartPanelProps {
+  storeId: string
   canDiscountWithoutPin: boolean
   onCheckout: () => void
   onPark: () => void
 }
 
-export function CartPanel({ canDiscountWithoutPin, onCheckout, onPark }: CartPanelProps) {
+export function CartPanel({ storeId, canDiscountWithoutPin, onCheckout, onPark }: CartPanelProps) {
   const items = useCartStore((state) => state.items)
   const discount = useCartStore((state) => state.discount)
+  const customerId = useCartStore((state) => state.customerId)
+  const setCustomerId = useCartStore((state) => state.setCustomerId)
   const updateQuantity = useCartStore((state) => state.updateQuantity)
   const removeItem = useCartStore((state) => state.removeItem)
   const setDiscount = useCartStore((state) => state.setDiscount)
@@ -22,6 +28,14 @@ export function CartPanel({ canDiscountWithoutPin, onCheckout, onPark }: CartPan
 
   const [pinModalOpen, setPinModalOpen] = useState(false)
   const [discountInput, setDiscountInput] = useState(false)
+  const [customerPickerOpen, setCustomerPickerOpen] = useState(false)
+
+  const customersQuery = useQuery({
+    queryKey: ['customers', storeId],
+    queryFn: () => listCustomers(storeId),
+    enabled: customerPickerOpen,
+  })
+  const selectedCustomer = customersQuery.data?.find((c) => c.id === customerId)
 
   function requestDiscount() {
     if (canDiscountWithoutPin) {
@@ -33,6 +47,29 @@ export function CartPanel({ canDiscountWithoutPin, onCheckout, onPark }: CartPan
 
   return (
     <div className="flex h-full flex-col">
+      <div className="border-carbon-100 dark:border-carbon-800 flex items-center justify-between border-b px-4 py-2">
+        <span className="text-carbon-500 dark:text-carbon-400 text-sm">
+          {selectedCustomer ? `Cliente: ${selectedCustomer.name}` : 'Sin cliente'}
+        </span>
+        <div className="flex gap-2">
+          {customerId && (
+            <button
+              type="button"
+              onClick={() => setCustomerId(null)}
+              className="text-carbon-400 text-sm hover:underline"
+            >
+              Quitar
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setCustomerPickerOpen(true)}
+            className="text-brand-600 dark:text-brand-400 text-sm font-medium hover:underline"
+          >
+            {customerId ? 'Cambiar' : '+ Agregar'}
+          </button>
+        </div>
+      </div>
       <div className="flex-1 overflow-y-auto">
         {items.length === 0 ? (
           <p className="text-carbon-400 p-6 text-center text-sm">El carrito está vacío.</p>
@@ -158,6 +195,39 @@ export function CartPanel({ canDiscountWithoutPin, onCheckout, onPark }: CartPan
           setDiscountInput(true)
         }}
       />
+
+      <Modal
+        open={customerPickerOpen}
+        onClose={() => setCustomerPickerOpen(false)}
+        title="Seleccionar cliente"
+      >
+        <ul className="flex max-h-80 flex-col gap-1 overflow-y-auto">
+          {customersQuery.data?.map((customer) => (
+            <li key={customer.id}>
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomerId(customer.id)
+                  setCustomerPickerOpen(false)
+                }}
+                className="hover:bg-carbon-100 dark:hover:bg-carbon-800 flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left"
+              >
+                <span>{customer.name}</span>
+                {customer.credit_balance > 0 && (
+                  <span className="text-sm text-amber-600 dark:text-amber-400">
+                    ${customer.credit_balance.toFixed(2)}
+                  </span>
+                )}
+              </button>
+            </li>
+          ))}
+          {customersQuery.data?.length === 0 && (
+            <p className="text-carbon-400 p-4 text-center text-sm">
+              No hay clientes. Agrégalos desde el módulo Clientes.
+            </p>
+          )}
+        </ul>
+      </Modal>
     </div>
   )
 }

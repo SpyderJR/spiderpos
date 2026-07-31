@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { to: '/backoffice/venta', label: 'Venta', icon: '🛒' },
   { to: '/backoffice/ventas', label: 'Ventas', icon: '🧾' },
   { to: '/backoffice/inventario', label: 'Inventario', icon: '📦' },
+  { to: '/backoffice/clientes', label: 'Clientes', icon: '🧑‍🤝‍🧑' },
   { to: '/backoffice/perfil', label: 'Perfil', icon: '🏪' },
   { to: '/backoffice/personal', label: 'Personal', icon: '👥' },
 ]

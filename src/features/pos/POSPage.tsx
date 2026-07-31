@@ -1,4 +1,5 @@
 import { Suspense, lazy, useCallback, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useCurrentMember } from '../auth/useCurrentMember'
 import { useProductSync } from './useProductSync'
 import { useProductSearch } from './useProductSearch'
@@ -29,6 +30,7 @@ const UNIT_LABELS: Record<string, string> = { piece: 'pza', kg: 'kg', g: 'g', lt
 export function POSPage() {
   const { data: member } = useCurrentMember()
   const storeId = member?.store_id
+  const queryClient = useQueryClient()
   const { resync } = useProductSync(storeId)
   const { favorites, search, findByBarcode } = useProductSearch(storeId)
 
@@ -128,6 +130,7 @@ export function POSPage() {
       setPaymentOpen(false)
       setCartOpenMobile(false)
       resync()
+      queryClient.invalidateQueries({ queryKey: ['customers', storeId] })
       fetchReceiptData(saleId)
         .then((data) => setCompletedReceipt(data))
         .catch(() => {
@@ -209,6 +212,7 @@ export function POSPage() {
 
       <div className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 hidden w-96 shrink-0 rounded-2xl border bg-white md:block">
         <CartPanel
+          storeId={storeId}
           canDiscountWithoutPin={canDiscountWithoutPin}
           onCheckout={() => setPaymentOpen(true)}
           onPark={parkCurrentCart}
@@ -227,6 +231,7 @@ export function POSPage() {
       <Modal open={cartOpenMobile} onClose={() => setCartOpenMobile(false)} title="Carrito">
         <div className="h-[70dvh]">
           <CartPanel
+            storeId={storeId}
             canDiscountWithoutPin={canDiscountWithoutPin}
             onCheckout={() => {
               setCartOpenMobile(false)
