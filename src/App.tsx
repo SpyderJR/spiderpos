@@ -22,6 +22,7 @@ const BusinessProfilePage = lazy(() =>
 const StaffPage = lazy(() =>
   import('./features/backoffice/staff/StaffPage').then((m) => ({ default: m.StaffPage })),
 )
+const POSPage = lazy(() => import('./features/pos/POSPage').then((m) => ({ default: m.POSPage })))
 
 function RouteFallback() {
   return (
@@ -45,7 +46,8 @@ function App() {
 
           <Route element={<ProtectedRoute />}>
             <Route path="/backoffice" element={<BackofficeLayout />}>
-              <Route index element={<Navigate to="perfil" replace />} />
+              <Route index element={<Navigate to="venta" replace />} />
+              <Route path="venta" element={<POSPage />} />
               <Route path="perfil" element={<BusinessProfilePage />} />
               <Route path="personal" element={<StaffPage />} />
             </Route>

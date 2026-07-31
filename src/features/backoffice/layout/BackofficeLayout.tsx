@@ -6,6 +6,7 @@ import { useCurrentMember } from '../../auth/useCurrentMember'
 import { signOut } from '../../auth/api'
 
 const NAV_ITEMS = [
+  { to: '/backoffice/venta', label: 'Venta', icon: '🛒' },
   { to: '/backoffice/perfil', label: 'Perfil', icon: '🏪' },
   { to: '/backoffice/personal', label: 'Personal', icon: '👥' },
 ]

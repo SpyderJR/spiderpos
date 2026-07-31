@@ -1302,7 +1302,20 @@ export type Database = {
         Returns: Database['public']['Enums']['store_role']
       }
       auth_store_id: { Args: never; Returns: string }
+      record_sale: {
+        Args: {
+          p_client_created_at: string
+          p_customer_id?: string
+          p_discount?: number
+          p_items: Json
+          p_notes?: string
+          p_payments: Json
+          p_sale_id: string
+        }
+        Returns: Json
+      }
       seed_store_catalog: { Args: { p_store_id: string }; Returns: undefined }
+      verify_supervisor_pin: { Args: { p_pin: string }; Returns: boolean }
     }
     Enums: {
       cash_movement_type: 'in' | 'out'
