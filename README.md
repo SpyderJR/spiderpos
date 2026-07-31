@@ -74,12 +74,22 @@ pnpm format            # Prettier (con orden de clases Tailwind)
 ```bash
 pnpm dlx supabase link --project-ref <ref>                                  # vincular repo ↔ proyecto
 pnpm dlx supabase db push                                                    # aplicar migraciones (supabase/migrations)
-pnpm dlx supabase functions deploy pin-login --project-ref <ref> --use-api           # login por PIN (empleados)
-pnpm dlx supabase functions deploy create-staff-member --project-ref <ref> --use-api # alta de personal
+pnpm dlx supabase functions deploy <nombre> --project-ref <ref> --use-api    # desplegar una Edge Function
 pnpm dlx supabase gen types typescript --project-id <ref> > src/lib/database/types.ts # tipos TS desde el esquema real
 ```
 
-Ambas Edge Functions requieren `SUPABASE_SERVICE_ROLE_KEY` (inyectada automáticamente por la plataforma en runtime, nunca la pones tú a mano ahí). `pin-login` es pública (`verify_jwt = false`, ver `supabase/config.toml`) porque se llama antes de que exista sesión; `create-staff-member` exige un JWT de owner/manager.
+Edge Functions (`supabase/functions/`):
+
+| Función               | Acceso                         | Propósito                                                            |
+| --------------------- | ------------------------------ | -------------------------------------------------------------------- |
+| `pin-login`           | Pública (`verify_jwt = false`) | Login rápido de cajeros por PIN                                      |
+| `create-staff-member` | JWT de owner/manager           | Alta de personal (crea usuario real en Supabase Auth)                |
+| `create-checkout`     | Pública (`verify_jwt = false`) | Registro de negocio → crea suscripción recurrente en Mercado Pago    |
+| `mercadopago-webhook` | Pública (`verify_jwt = false`) | Único punto de provisión de tenants y actualización de suscripciones |
+| `check-signup-status` | Pública (`verify_jwt = false`) | Sondeo tras el checkout + login automático (magic link)              |
+| `manage-subscription` | JWT de owner                   | Reactivación (paywall) y upgrade mensual→anual                       |
+
+Todas usan `SUPABASE_SERVICE_ROLE_KEY` (inyectada automáticamente por la plataforma en runtime). Las que llaman a Mercado Pago requieren además el secreto `MERCADOPAGO_ACCESS_TOKEN` (`supabase secrets set MERCADOPAGO_ACCESS_TOKEN=...`); si se configura una firma de webhook en el dashboard de Mercado Pago, agregar también `MERCADOPAGO_WEBHOOK_SECRET`.
 
 ## Despliegue
 

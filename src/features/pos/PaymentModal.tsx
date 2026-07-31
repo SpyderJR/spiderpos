@@ -14,6 +14,7 @@ interface PaymentModalProps {
   open: boolean
   total: number
   hasCustomer: boolean
+  isOnline: boolean
   submitting: boolean
   error: string | null
   onClose: () => void
@@ -24,6 +25,7 @@ export function PaymentModal({
   open,
   total,
   hasCustomer,
+  isOnline,
   submitting,
   error,
   onClose,
@@ -130,8 +132,8 @@ export function PaymentModal({
             <Button variant="secondary" onClick={() => openMethod('cash')}>
               💵 Efectivo
             </Button>
-            <Button variant="secondary" onClick={() => openMethod('card')}>
-              💳 Tarjeta
+            <Button variant="secondary" disabled={!isOnline} onClick={() => openMethod('card')}>
+              💳 Tarjeta{!isOnline && ' (requiere conexión)'}
             </Button>
             <Button variant="secondary" onClick={() => openMethod('transfer')}>
               📲 Transferencia

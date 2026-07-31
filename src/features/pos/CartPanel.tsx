@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { useCartStore } from '../../store/useCartStore'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
 import { SupervisorPinModal } from './SupervisorPinModal'
-import { listCustomers } from '../customers/api'
+import { db, type LocalCustomer } from '../../lib/db'
 import { useCartPricing } from './useCartPricing'
 
 const UNIT_LABELS: Record<string, string> = { piece: 'pza', kg: 'kg', g: 'g', lt: 'lt', m: 'm' }
@@ -29,12 +29,12 @@ export function CartPanel({ storeId, canDiscountWithoutPin, onCheckout, onPark }
   const [discountInput, setDiscountInput] = useState(false)
   const [customerPickerOpen, setCustomerPickerOpen] = useState(false)
 
-  const customersQuery = useQuery({
-    queryKey: ['customers', storeId],
-    queryFn: () => listCustomers(storeId),
-    enabled: customerPickerOpen,
-  })
-  const selectedCustomer = customersQuery.data?.find((c) => c.id === customerId)
+  const customers = useLiveQuery(
+    () => db.customers.where('storeId').equals(storeId).sortBy('name'),
+    [storeId],
+    [] as LocalCustomer[],
+  )
+  const selectedCustomer = customers.find((c) => c.id === customerId)
 
   function requestDiscount() {
     if (canDiscountWithoutPin) {
@@ -215,7 +215,7 @@ export function CartPanel({ storeId, canDiscountWithoutPin, onCheckout, onPark }
         title="Seleccionar cliente"
       >
         <ul className="flex max-h-80 flex-col gap-1 overflow-y-auto">
-          {customersQuery.data?.map((customer) => (
+          {customers.map((customer) => (
             <li key={customer.id}>
               <button
                 type="button"
@@ -226,15 +226,15 @@ export function CartPanel({ storeId, canDiscountWithoutPin, onCheckout, onPark }
                 className="hover:bg-carbon-100 dark:hover:bg-carbon-800 flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left"
               >
                 <span>{customer.name}</span>
-                {customer.credit_balance > 0 && (
+                {customer.creditBalance > 0 && (
                   <span className="text-sm text-amber-600 dark:text-amber-400">
-                    ${customer.credit_balance.toFixed(2)}
+                    ${customer.creditBalance.toFixed(2)}
                   </span>
                 )}
               </button>
             </li>
           ))}
-          {customersQuery.data?.length === 0 && (
+          {customers.length === 0 && (
             <p className="text-carbon-400 p-4 text-center text-sm">
               No hay clientes. Agrégalos desde el módulo Clientes.
             </p>

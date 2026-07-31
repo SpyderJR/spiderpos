@@ -1,11 +1,26 @@
-import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchPlatformMetrics } from './api'
+import { createAnnouncement } from '../notifications/api'
+import { Button } from '../../components/ui/Button'
 
 const CARD_CLASS = 'rounded-2xl border border-carbon-800 bg-carbon-900 p-5 flex flex-col gap-1'
 
 export function AdminDashboardPage() {
   const metricsQuery = useQuery({ queryKey: ['platform-metrics'], queryFn: fetchPlatformMetrics })
   const m = metricsQuery.data
+  const queryClient = useQueryClient()
+  const [title, setTitle] = useState('')
+  const [body, setBody] = useState('')
+
+  const announceMutation = useMutation({
+    mutationFn: () => createAnnouncement(title, body),
+    onSuccess: () => {
+      setTitle('')
+      setBody('')
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    },
+  })
 
   return (
     <div className="flex flex-col gap-6">
@@ -48,6 +63,36 @@ export function AdminDashboardPage() {
           </div>
         </div>
       )}
+
+      <div>
+        <h2 className="text-paper mb-3 text-lg font-semibold">Publicar anuncio</h2>
+        <div className="border-carbon-800 bg-carbon-900 flex flex-col gap-3 rounded-2xl border p-5">
+          <input
+            placeholder="Título"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="border-carbon-700 bg-carbon-950 text-paper placeholder:text-carbon-500 rounded-xl border px-4 py-2.5 text-sm"
+          />
+          <textarea
+            placeholder="Mensaje para todos los negocios"
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            rows={3}
+            className="border-carbon-700 bg-carbon-950 text-paper placeholder:text-carbon-500 rounded-xl border px-4 py-2.5 text-sm"
+          />
+          <Button
+            onClick={() => announceMutation.mutate()}
+            disabled={!title.trim() || !body.trim()}
+            loading={announceMutation.isPending}
+            className="self-start"
+          >
+            Publicar
+          </Button>
+          {announceMutation.isSuccess && (
+            <p className="text-sm text-emerald-400">Anuncio publicado.</p>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

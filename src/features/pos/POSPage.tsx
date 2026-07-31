@@ -14,6 +14,8 @@ import { PaymentModal } from './PaymentModal'
 import { ParkedSalesDrawer } from './ParkedSalesDrawer'
 import { Modal } from '../../components/ui/Modal'
 import { checkoutSale, type PaymentInput } from './api'
+import { queueSale, isNetworkError } from './offlineQueue'
+import { useOnlineStatus } from '../../lib/useOnlineStatus'
 import { playScanBeep, playChaChing, playErrorTone, vibrate } from './sensoryFeedback'
 import { fetchReceiptData } from '../receipts/api'
 import { ReceiptActions } from '../receipts/ReceiptActions'
@@ -33,6 +35,7 @@ export function POSPage() {
   const storeId = member?.store_id
   const queryClient = useQueryClient()
   const { resync } = useProductSync(storeId)
+  const isOnline = useOnlineStatus()
   const { favorites, search, findByBarcode } = useProductSearch(storeId)
 
   const items = useCartStore((state) => state.items)
@@ -52,6 +55,7 @@ export function POSPage() {
   const [notFoundCode, setNotFoundCode] = useState<string | null>(null)
   const [completedReceipt, setCompletedReceipt] = useState<ReceiptData | null>(null)
   const [printerSettingsOpen, setPrinterSettingsOpen] = useState(false)
+  const [queuedNotice, setQueuedNotice] = useState(false)
 
   const canDiscountWithoutPin =
     member?.role === 'owner' ||
@@ -112,18 +116,26 @@ export function POSPage() {
   }
 
   async function confirmPayment(payments: PaymentInput[]) {
+    if (!isOnline && payments.some((p) => p.method === 'card')) {
+      setCheckoutError('Los pagos con tarjeta requieren conexión a internet.')
+      return
+    }
+
     setCheckingOut(true)
     setCheckoutError(null)
+    const saleId = crypto.randomUUID()
+    const checkoutInput = {
+      saleId,
+      items: pricedItems.map((item) => ({ ...item, discount: item.computedDiscount })),
+      payments,
+      customerId,
+      discount: manualDiscount,
+      clientCreatedAt: new Date().toISOString(),
+    }
+
     try {
-      const saleId = crypto.randomUUID()
-      await checkoutSale({
-        saleId,
-        items: pricedItems.map((item) => ({ ...item, discount: item.computedDiscount })),
-        payments,
-        customerId,
-        discount: manualDiscount,
-        clientCreatedAt: new Date().toISOString(),
-      })
+      if (!isOnline) throw new Error('offline')
+      await checkoutSale(checkoutInput)
       playChaChing()
       vibrate([40, 60, 40])
       clearCart()
@@ -137,8 +149,18 @@ export function POSPage() {
           /* la venta ya quedó registrada; solo falló mostrar el ticket */
         })
     } catch (err) {
-      playErrorTone()
-      setCheckoutError(err instanceof Error ? err.message : 'No se pudo registrar la venta')
+      if (isNetworkError(err) && storeId) {
+        await queueSale(checkoutInput, storeId)
+        playChaChing()
+        vibrate([40, 60, 40])
+        clearCart()
+        setPaymentOpen(false)
+        setCartOpenMobile(false)
+        setQueuedNotice(true)
+      } else {
+        playErrorTone()
+        setCheckoutError(err instanceof Error ? err.message : 'No se pudo registrar la venta')
+      }
     } finally {
       setCheckingOut(false)
     }
@@ -265,6 +287,7 @@ export function POSPage() {
         open={paymentOpen}
         total={total}
         hasCustomer={!!customerId}
+        isOnline={isOnline}
         submitting={checkingOut}
         error={checkoutError}
         onClose={() => setPaymentOpen(false)}
@@ -297,6 +320,22 @@ export function POSPage() {
             <ReceiptActions data={completedReceipt} />
           </div>
         )}
+      </Modal>
+
+      <Modal open={queuedNotice} onClose={() => setQueuedNotice(false)} title="Venta guardada 📥">
+        <div className="flex flex-col gap-3 text-center">
+          <p className="text-carbon-700 dark:text-carbon-300">
+            No hay conexión — la venta se guardó en este dispositivo y se sincronizará
+            automáticamente en cuanto vuelva el internet.
+          </p>
+          <button
+            type="button"
+            onClick={() => setQueuedNotice(false)}
+            className="text-brand-600 dark:text-brand-400 text-sm font-medium hover:underline"
+          >
+            Entendido
+          </button>
+        </div>
       </Modal>
 
       <PrinterSettingsModal

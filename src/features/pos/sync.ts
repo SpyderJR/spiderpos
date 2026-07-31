@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabase'
-import { db, type LocalProduct, type LocalPromotion } from '../../lib/db'
+import { db, type LocalProduct, type LocalPromotion, type LocalCustomer } from '../../lib/db'
 import { normalizeText } from '../../lib/normalizeText'
 
 export async function syncProducts(storeId: string): Promise<number> {
@@ -69,4 +69,35 @@ export async function syncPromotions(storeId: string): Promise<number> {
   })
 
   return localPromotions.length
+}
+
+/**
+ * Los clientes se sincronizan a IndexedDB igual que el catálogo: sin esto,
+ * el fiado (crédito) no podría venderse offline porque no habría a quién
+ * cargarle la cuenta (PRD §6: "efectivo y fiado funcionan 100% offline").
+ */
+export async function syncCustomers(storeId: string): Promise<number> {
+  const { data, error } = await supabase
+    .from('customers')
+    .select('id, store_id, name, phone, credit_limit, credit_balance')
+    .eq('store_id', storeId)
+    .eq('active', true)
+
+  if (error) throw error
+
+  const localCustomers: LocalCustomer[] = data.map((c) => ({
+    id: c.id,
+    storeId: c.store_id,
+    name: c.name,
+    phone: c.phone,
+    creditLimit: c.credit_limit,
+    creditBalance: c.credit_balance,
+  }))
+
+  await db.transaction('rw', db.customers, async () => {
+    await db.customers.where('storeId').equals(storeId).delete()
+    await db.customers.bulkAdd(localCustomers)
+  })
+
+  return localCustomers.length
 }

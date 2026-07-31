@@ -265,4 +265,17 @@ describe('Aislamiento multi-tenant (RLS)', () => {
     const { error: metricsErr } = await tenantA.client.rpc('get_platform_metrics')
     expect(metricsErr).not.toBeNull()
   })
+
+  it('cualquier tienda puede leer anuncios de la plataforma, pero solo un platform_admin puede publicarlos (Fase 10)', async () => {
+    const { data: readable, error: readErr } = await tenantA.client
+      .from('announcements')
+      .select('*')
+    expect(readErr).toBeNull()
+    expect(Array.isArray(readable)).toBe(true)
+
+    const { error: insertErr } = await tenantA.client
+      .from('announcements')
+      .insert({ title: 'Intruso', body: 'no debería poder' })
+    expect(insertErr).not.toBeNull()
+  })
 })

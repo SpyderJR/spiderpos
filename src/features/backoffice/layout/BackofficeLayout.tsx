@@ -6,6 +6,8 @@ import { ThemeToggle } from '../../../components/ThemeToggle'
 import { Modal } from '../../../components/ui/Modal'
 import { useCurrentMember } from '../../auth/useCurrentMember'
 import { signOut } from '../../auth/api'
+import { useOfflineSync } from '../../pos/useOfflineSync'
+import { NotificationCenter } from '../../notifications/NotificationCenter'
 
 // La barra inferior móvil solo alcanza para ~5 accesos directos; el resto
 // vive detrás de "Más". El sidebar de escritorio muestra todo siempre.
@@ -31,6 +33,7 @@ const ALL_NAV = [...PRIMARY_NAV, ...SECONDARY_NAV]
 export function BackofficeLayout() {
   const { data: member } = useCurrentMember()
   const [moreOpen, setMoreOpen] = useState(false)
+  useOfflineSync(member?.store_id)
 
   return (
     <div className="bg-paper dark:bg-carbon-950 flex min-h-dvh flex-col md:flex-row">
@@ -73,6 +76,7 @@ export function BackofficeLayout() {
             {member?.stores?.name}
           </div>
           <div className="flex items-center gap-1.5 sm:gap-3">
+            <NotificationCenter storeId={member?.store_id} />
             <ConnectionStatus />
             <ThemeToggle />
             <div className="hidden text-right text-sm md:block">

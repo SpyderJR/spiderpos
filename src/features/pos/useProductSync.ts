@@ -1,12 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
-import { syncProducts, syncPromotions } from './sync'
+import { syncProducts, syncPromotions, syncCustomers } from './sync'
 
-/** Descarga el catálogo y las promociones activas de la tienda a IndexedDB al entrar al POS (y bajo demanda). */
+/** Descarga el catálogo, promociones y clientes de la tienda a IndexedDB al entrar al POS (y bajo demanda), para que la venta (incluido fiado) funcione sin conexión. */
 export function useProductSync(storeId: string | undefined) {
   const query = useQuery({
     queryKey: ['product-sync', storeId],
     queryFn: async () => {
-      const [productCount] = await Promise.all([syncProducts(storeId!), syncPromotions(storeId!)])
+      const [productCount] = await Promise.all([
+        syncProducts(storeId!),
+        syncPromotions(storeId!),
+        syncCustomers(storeId!),
+      ])
       return productCount
     },
     enabled: !!storeId,
