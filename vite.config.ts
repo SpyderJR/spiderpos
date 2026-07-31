@@ -55,5 +55,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     css: true,
+    // tests/rls.test.ts corre aparte con vitest.rls.config.ts (entorno node,
+    // requiere SUPABASE_SERVICE_ROLE_KEY) — ver script `pnpm test:rls`.
+    exclude: ['node_modules/**', 'tests/**'],
   },
 })
