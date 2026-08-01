@@ -120,7 +120,7 @@ export function SignupPage() {
               >
                 <input type="radio" value="monthly" className="sr-only" {...register('plan')} />
                 <span className="text-carbon-900 dark:text-paper block font-semibold">
-                  $149.99/mes
+                  $299/mes
                 </span>
               </label>
               <label

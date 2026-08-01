@@ -37,7 +37,7 @@ const PLANS = [
   {
     id: 'monthly' as const,
     name: 'Mensual Estándar',
-    price: '$149.99',
+    price: '$299',
     period: '/mes',
     note: 'Acceso completo a todos los módulos',
   },

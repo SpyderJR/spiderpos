@@ -18,9 +18,11 @@ const requestSchema = z.object({
   return_url: z.url(),
 })
 
+// Ver create-checkout/index.ts: Mercado Pago no soporta frequency_type
+// "years", así que el plan anual es "cada 12 meses".
 const PLAN_PRICING = {
-  monthly: { amount: 149.99, frequency: 1, frequency_type: 'months' as const },
-  annual: { amount: 1499, frequency: 1, frequency_type: 'years' as const },
+  monthly: { amount: 299, frequency: 1, frequency_type: 'months' as const },
+  annual: { amount: 1499, frequency: 12, frequency_type: 'months' as const },
 }
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -82,31 +84,38 @@ Deno.serve(async (req: Request) => {
   const targetPlan = action === 'upgrade' && new_plan ? new_plan : (subscription?.plan ?? 'monthly')
   const pricing = PLAN_PRICING[targetPlan]
 
-  const preapprovalRes = await fetch('https://api.mercadopago.com/preapproval', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${mpAccessToken}`,
-      'Content-Type': 'application/json',
-      'X-Idempotency-Key': `${member.store_id}-${Date.now()}`,
-    },
-    body: JSON.stringify({
-      reason: `SpiderPOS — Plan ${targetPlan === 'monthly' ? 'Mensual' : 'Anual'} (${store.name})`,
-      external_reference: store.id,
-      payer_email: caller.email,
-      back_url: return_url,
-      auto_recurring: {
-        frequency: pricing.frequency,
-        frequency_type: pricing.frequency_type,
-        transaction_amount: pricing.amount,
-        currency_id: 'MXN',
+  let preapproval: { id?: string; init_point?: string; message?: string }
+  try {
+    const preapprovalRes = await fetch('https://api.mercadopago.com/preapproval', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${mpAccessToken}`,
+        'Content-Type': 'application/json',
+        'X-Idempotency-Key': `${member.store_id}-${Date.now()}`,
       },
-    }),
-  })
-  const preapproval = await preapprovalRes.json()
-
-  if (!preapprovalRes.ok || !preapproval.init_point) {
+      body: JSON.stringify({
+        reason: `SpiderPOS — Plan ${targetPlan === 'monthly' ? 'Mensual' : 'Anual'} (${store.name})`,
+        external_reference: store.id,
+        payer_email: caller.email,
+        back_url: return_url,
+        auto_recurring: {
+          frequency: pricing.frequency,
+          frequency_type: pricing.frequency_type,
+          transaction_amount: pricing.amount,
+          currency_id: 'MXN',
+        },
+      }),
+    })
+    preapproval = await preapprovalRes.json()
+    if (!preapprovalRes.ok || !preapproval.init_point) {
+      return jsonResponse(
+        { error: preapproval.message ?? 'No se pudo crear la suscripción en Mercado Pago' },
+        502,
+      )
+    }
+  } catch {
     return jsonResponse(
-      { error: preapproval.message ?? 'No se pudo crear la suscripción en Mercado Pago' },
+      { error: 'No se pudo conectar con Mercado Pago, intenta de nuevo en un momento' },
       502,
     )
   }

@@ -161,11 +161,11 @@ subscriptions     → store_id, provider (stripe|mercadopago), provider_sub_id, 
 
 ### 4.1 Planes
 
-| Plan                                     | Precio                | Notas                                                          |
-| ---------------------------------------- | --------------------- | -------------------------------------------------------------- |
-| **Mensual Estándar**                     | **$149.99 MXN / mes** | Acceso completo a todos los módulos para un negocio            |
-| **Anual de Lanzamiento**                 | **$1,499 MXN / año**  | Equivalente a 2 meses gratis; mejora retención y flujo de caja |
-| Prueba gratuita (opcional, configurable) | 7–14 días             | Sin tarjeta o con tarjeta según estrategia de conversión       |
+| Plan                                     | Precio               | Notas                                                          |
+| ---------------------------------------- | -------------------- | -------------------------------------------------------------- |
+| **Mensual Estándar**                     | **$299 MXN / mes**   | Acceso completo a todos los módulos para un negocio            |
+| **Anual de Lanzamiento**                 | **$1,499 MXN / año** | Equivalente a 2 meses gratis; mejora retención y flujo de caja |
+| Prueba gratuita (opcional, configurable) | 7–14 días            | Sin tarjeta o con tarjeta según estrategia de conversión       |
 
 ### 4.2 Ciclo de Vida Automatizado de la Suscripción (Piloto Automático)
 
