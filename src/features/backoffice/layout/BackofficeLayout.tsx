@@ -7,6 +7,8 @@ import { ThemeToggle } from '../../../components/ThemeToggle'
 import { SoundToggle } from '../../../components/SoundToggle'
 import { FullscreenToggle } from '../../../components/FullscreenToggle'
 import { Modal } from '../../../components/ui/Modal'
+import { InstallAppModal } from '../../../components/InstallAppModal'
+import { useInstallPrompt } from '../../../lib/useInstallPrompt'
 import { useCurrentMember } from '../../auth/useCurrentMember'
 import { signOut } from '../../auth/api'
 import { useOfflineSync } from '../../pos/useOfflineSync'
@@ -38,6 +40,8 @@ const ALL_NAV = [...PRIMARY_NAV, ...SECONDARY_NAV]
 export function BackofficeLayout() {
   const { data: member } = useCurrentMember()
   const [moreOpen, setMoreOpen] = useState(false)
+  const [installOpen, setInstallOpen] = useState(false)
+  const { installed } = useInstallPrompt()
   const location = useLocation()
   useOfflineSync(member?.store_id)
 
@@ -70,6 +74,16 @@ export function BackofficeLayout() {
               </NavLink>
             ))}
           </nav>
+          {!installed && (
+            <button
+              type="button"
+              onClick={() => setInstallOpen(true)}
+              className="text-carbon-500 hover:bg-carbon-100 dark:text-carbon-400 dark:hover:bg-carbon-800 mt-auto flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium"
+            >
+              <span aria-hidden="true">📲</span>
+              Instalar app
+            </button>
+          )}
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
@@ -168,8 +182,25 @@ export function BackofficeLayout() {
               {item.label}
             </NavLink>
           ))}
+          {!installed && (
+            <button
+              type="button"
+              onClick={() => {
+                setMoreOpen(false)
+                setInstallOpen(true)
+              }}
+              className="border-carbon-200 text-carbon-700 hover:bg-carbon-50 dark:border-carbon-700 dark:text-carbon-200 dark:hover:bg-carbon-800 flex flex-col items-center gap-1 rounded-xl border p-4 text-sm font-medium"
+            >
+              <span className="text-2xl" aria-hidden="true">
+                📲
+              </span>
+              Instalar app
+            </button>
+          )}
         </div>
       </Modal>
+
+      <InstallAppModal open={installOpen} onClose={() => setInstallOpen(false)} />
     </div>
   )
 }
