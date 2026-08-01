@@ -25,7 +25,7 @@ const requestSchema = z.object({
 // El plan anual se modela como un cobro cada 12 meses.
 const PLAN_PRICING = {
   monthly: { amount: 299, frequency: 1, frequency_type: 'months' as const },
-  annual: { amount: 1499, frequency: 12, frequency_type: 'months' as const },
+  annual: { amount: 2990, frequency: 12, frequency_type: 'months' as const },
 }
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!

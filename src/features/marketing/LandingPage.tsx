@@ -44,7 +44,7 @@ const PLANS = [
   {
     id: 'annual' as const,
     name: 'Anual de Lanzamiento',
-    price: '$1,499',
+    price: '$2,990',
     period: '/año',
     note: 'Equivale a 2 meses gratis',
     highlight: true,
