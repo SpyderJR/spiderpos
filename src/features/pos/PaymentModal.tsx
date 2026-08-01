@@ -10,6 +10,16 @@ const METHOD_LABELS: Record<PaymentInput['method'], string> = {
   credit: 'Fiado',
 }
 
+// Efectivo se cobra y cuenta en el momento (por eso calculamos cambio).
+// Tarjeta y transferencia se cobran FUERA de la app (terminal física del
+// banco/Clip, o SPEI a la cuenta de la tienda) — aquí solo se registra el
+// monto ya aprobado, para que el cajero no espere que la app "procese" algo
+// que ya pasó en otro dispositivo.
+const EXTERNAL_PAYMENT_HINTS: Partial<Record<PaymentInput['method'], string>> = {
+  card: 'Cobra primero en tu terminal física (datáfono/Clip) y, ya aprobado, registra aquí el monto exacto.',
+  transfer: 'Confirma que el pago ya llegó a tu cuenta antes de registrarlo aquí.',
+}
+
 interface PaymentModalProps {
   open: boolean
   total: number
@@ -110,6 +120,11 @@ export function PaymentModal({
             <p className="text-carbon-700 dark:text-carbon-300 text-sm font-medium">
               Monto en {METHOD_LABELS[pendingMethod]}
             </p>
+            {EXTERNAL_PAYMENT_HINTS[pendingMethod] && (
+              <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+                ℹ️ {EXTERNAL_PAYMENT_HINTS[pendingMethod]}
+              </p>
+            )}
             <input
               type="number"
               inputMode="decimal"
