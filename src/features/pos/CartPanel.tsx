@@ -218,7 +218,12 @@ export function CartPanel({ storeId, canDiscountWithoutPin, onCheckout, onPark }
           >
             En espera
           </Button>
-          <Button onClick={onCheckout} disabled={pricedItems.length === 0} className="flex-[2]">
+          <Button
+            data-tour="pos-cobrar"
+            onClick={onCheckout}
+            disabled={pricedItems.length === 0}
+            className="flex-[2]"
+          >
             Cobrar (F4)
           </Button>
         </div>

@@ -123,7 +123,7 @@ export function LandingPage() {
           className="flex flex-col items-center gap-6 py-16 text-center"
         >
           <h1 className="text-carbon-900 dark:text-paper max-w-2xl text-4xl font-bold text-balance sm:text-5xl">
-            El punto de venta que tu changarro se merece
+            El punto de venta profesional que tu negocio merece
           </h1>
           <p className="text-carbon-600 dark:text-carbon-300 max-w-xl text-lg text-balance">
             Vende, controla tu inventario, cobra fiados y saca tus cortes de caja — desde tu

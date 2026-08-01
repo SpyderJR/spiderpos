@@ -1222,6 +1222,7 @@ export type Database = {
           pin_hash: string | null
           role: Database['public']['Enums']['store_role']
           store_id: string
+          tour_completed_at: string | null
           updated_at: string
           user_id: string
         }
@@ -1234,6 +1235,7 @@ export type Database = {
           pin_hash?: string | null
           role?: Database['public']['Enums']['store_role']
           store_id: string
+          tour_completed_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1246,6 +1248,7 @@ export type Database = {
           pin_hash?: string | null
           role?: Database['public']['Enums']['store_role']
           store_id?: string
+          tour_completed_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1566,6 +1569,7 @@ export type Database = {
         Args: { p_items: Json; p_reason: string; p_sale_id: string }
         Returns: Json
       }
+      seed_demo_content: { Args: { p_store_id: string }; Returns: undefined }
       seed_store_catalog: { Args: { p_store_id: string }; Returns: undefined }
       verify_supervisor_pin: { Args: { p_pin: string }; Returns: boolean }
     }

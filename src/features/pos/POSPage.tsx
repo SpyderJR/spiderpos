@@ -268,10 +268,11 @@ export function POSPage() {
       )}
 
       {/* Zona 2: búsqueda + catálogo */}
-      <div className="flex min-w-0 flex-1 flex-col gap-3 overflow-hidden">
+      <div data-tour="pos-catalog" className="flex min-w-0 flex-1 flex-col gap-3 overflow-hidden">
         <div className="flex gap-2">
           <input
             ref={searchRef}
+            data-tour="pos-search"
             type="search"
             inputMode="search"
             placeholder="Buscar producto o escanear código... (F2)"
@@ -281,6 +282,7 @@ export function POSPage() {
           />
           <button
             type="button"
+            data-tour="pos-scan"
             onClick={() => setScannerOpen(true)}
             aria-label="Escanear con cámara (F3)"
             title="Escanear con cámara (F3)"
@@ -376,6 +378,7 @@ export function POSPage() {
 
       <button
         type="button"
+        data-tour="pos-cobrar"
         onClick={() => setCartOpenMobile(true)}
         className="to-brand-600 fixed inset-x-4 bottom-20 z-10 flex min-h-11 items-center justify-between rounded-xl bg-gradient-to-br from-violet-600 px-4 py-3 text-white shadow-[var(--shadow-floating)] md:hidden"
       >

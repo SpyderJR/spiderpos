@@ -7,6 +7,7 @@ import { TextField } from '../../../components/ui/TextField'
 import { Button } from '../../../components/ui/Button'
 import { useCurrentMember } from '../../auth/useCurrentMember'
 import { updateStoreProfile, uploadStoreLogo } from './api'
+import { useTourContext } from '../../onboarding/useProductTour'
 
 const BUSINESS_TYPE_LABELS: Record<string, string> = {
   abarrotes: 'Abarrotes',
@@ -33,6 +34,7 @@ type FormValues = z.infer<typeof schema>
 
 export function BusinessProfilePage() {
   const { data: member } = useCurrentMember()
+  const tour = useTourContext()
   const store = member?.stores
   const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -96,11 +98,22 @@ export function BusinessProfilePage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <div>
-        <h1 className="text-carbon-900 dark:text-paper text-2xl font-bold">Perfil comercial</h1>
-        <p className="text-carbon-500 dark:text-carbon-400 text-sm">
-          Giro: <span className="font-medium">{BUSINESS_TYPE_LABELS[store.business_type]}</span>
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-carbon-900 dark:text-paper text-2xl font-bold">Perfil comercial</h1>
+          <p className="text-carbon-500 dark:text-carbon-400 text-sm">
+            Giro: <span className="font-medium">{BUSINESS_TYPE_LABELS[store.business_type]}</span>
+          </p>
+        </div>
+        {isOwner && tour && (
+          <button
+            type="button"
+            onClick={() => tour.startTour()}
+            className="text-brand-600 dark:text-brand-400 shrink-0 text-sm font-medium hover:underline"
+          >
+            Ver el tour de nuevo
+          </button>
+        )}
       </div>
 
       <section className="border-carbon-100 dark:border-carbon-800 dark:bg-carbon-900 flex items-center gap-4 rounded-2xl border bg-white p-4 shadow-[var(--shadow-soft)]">
