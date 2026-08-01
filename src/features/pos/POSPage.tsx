@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCurrentMember } from '../auth/useCurrentMember'
 import { useProductSync } from './useProductSync'
@@ -13,10 +13,12 @@ import { CartPanel } from './CartPanel'
 import { PaymentModal } from './PaymentModal'
 import { ParkedSalesDrawer } from './ParkedSalesDrawer'
 import { Modal } from '../../components/ui/Modal'
+import { EmptyState } from '../../components/ui/EmptyState'
+import { SkeletonList } from '../../components/ui/Skeleton'
 import { checkoutSale, type PaymentInput } from './api'
 import { queueSale, isNetworkError } from './offlineQueue'
 import { useOnlineStatus } from '../../lib/useOnlineStatus'
-import { playScanBeep, playChaChing, playErrorTone, vibrate } from './sensoryFeedback'
+import { playScanBeep, playChaChing, playErrorTone, playPop, vibrate } from '../../lib/sound'
 import { fetchReceiptData } from '../receipts/api'
 import { ReceiptActions } from '../receipts/ReceiptActions'
 import { PrinterSettingsModal } from '../receipts/PrinterSettingsModal'
@@ -30,13 +32,28 @@ const BarcodeScanner = lazy(() =>
 
 const UNIT_LABELS: Record<string, string> = { piece: 'pza', kg: 'kg', g: 'g', lt: 'lt', m: 'm' }
 
+const TILE_GRADIENTS = [
+  'from-violet-500 to-brand-600',
+  'from-emerald-500 to-teal-600',
+  'from-amber-500 to-orange-600',
+  'from-sky-500 to-blue-600',
+  'from-pink-500 to-rose-600',
+  'from-teal-500 to-cyan-600',
+]
+
+function tileGradient(seed: string) {
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
+  return TILE_GRADIENTS[hash % TILE_GRADIENTS.length]
+}
+
 export function POSPage() {
   const { data: member } = useCurrentMember()
   const storeId = member?.store_id
   const queryClient = useQueryClient()
-  const { resync } = useProductSync(storeId)
+  const { resync, syncing } = useProductSync(storeId)
   const isOnline = useOnlineStatus()
-  const { favorites, search, findByBarcode } = useProductSearch(storeId)
+  const { products, favorites, search, findByBarcode } = useProductSearch(storeId)
 
   const items = useCartStore((state) => state.items)
   const customerId = useCartStore((state) => state.customerId)
@@ -45,6 +62,7 @@ export function POSPage() {
   const { pricedItems, manualDiscount, total } = useCartPricing(storeId)
 
   const [query, setQuery] = useState('')
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [scannerOpen, setScannerOpen] = useState(false)
   const [bulkProduct, setBulkProduct] = useState<LocalProduct | null>(null)
   const [cartOpenMobile, setCartOpenMobile] = useState(false)
@@ -56,16 +74,27 @@ export function POSPage() {
   const [completedReceipt, setCompletedReceipt] = useState<ReceiptData | null>(null)
   const [printerSettingsOpen, setPrinterSettingsOpen] = useState(false)
   const [queuedNotice, setQueuedNotice] = useState(false)
+  const searchRef = useRef<HTMLInputElement>(null)
 
   const canDiscountWithoutPin =
     member?.role === 'owner' ||
     member?.role === 'manager' ||
     !!(member?.permissions as Record<string, boolean>)?.manual_discount
 
+  const categories = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const p of products) {
+      if (p.categoryId && p.categoryName) map.set(p.categoryId, p.categoryName)
+    }
+    return Array.from(map, ([id, name]) => ({ id, name })).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    )
+  }, [products])
+
   function handleProductPick(product: LocalProduct) {
     if (product.unitType === 'piece') {
       addProduct(product, 1)
-      playScanBeep()
+      playPop()
       vibrate(30)
     } else {
       setBulkProduct(product)
@@ -77,6 +106,7 @@ export function POSPage() {
       const product = findByBarcode(code)
       if (product) {
         handleProductPick(product)
+        playScanBeep()
         setScannerOpen(false)
         setQuery('')
       } else {
@@ -91,7 +121,35 @@ export function POSPage() {
 
   useHidScanner(handleBarcode, !scannerOpen)
 
+  // Atajos de teclado para cajeros en PC/terminal táctil con teclado
+  // físico (PRD 5.B): F2 busca, F3 escanea, F4 cobra, F6 pone en espera,
+  // Esc limpia la búsqueda / cierra modales secundarios.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'F2') {
+        e.preventDefault()
+        searchRef.current?.focus()
+      } else if (e.key === 'F3') {
+        e.preventDefault()
+        setScannerOpen(true)
+      } else if (e.key === 'F4') {
+        e.preventDefault()
+        if (items.length > 0) setPaymentOpen(true)
+      } else if (e.key === 'F6') {
+        e.preventDefault()
+        setParkedOpen(true)
+      } else if (e.key === 'Escape' && query) {
+        setQuery('')
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [items.length, query])
+
   const results = query ? search(query) : []
+  const categoryProducts = activeCategory
+    ? products.filter((p) => p.categoryId === activeCategory)
+    : []
 
   async function parkCurrentCart() {
     if (!storeId || items.length === 0) return
@@ -168,14 +226,55 @@ export function POSPage() {
 
   if (!storeId) return null
 
+  const showingCategory = !query && activeCategory
+  const gridProducts = query ? results : showingCategory ? categoryProducts : favorites
+  const gridLabel = query
+    ? `Resultados para "${query}"`
+    : showingCategory
+      ? (categories.find((c) => c.id === activeCategory)?.name ?? 'Categoría')
+      : 'Favoritos'
+
   return (
-    <div className="flex h-[calc(100dvh-8.5rem)] flex-col gap-4 md:h-[calc(100dvh-5rem)] md:flex-row">
-      <div className="flex flex-1 flex-col gap-3 overflow-hidden">
+    <div className="flex h-[calc(100dvh-8.5rem)] gap-3 md:h-[calc(100dvh-5rem)]">
+      {/* Zona 1: categorías (rail vertical en desktop, oculto en móvil) */}
+      {categories.length > 0 && (
+        <div className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 hidden w-40 shrink-0 flex-col gap-1 overflow-y-auto rounded-2xl border bg-white p-2 xl:flex">
+          <button
+            type="button"
+            onClick={() => setActiveCategory(null)}
+            className={`rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors ${
+              !activeCategory
+                ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300'
+                : 'text-carbon-600 hover:bg-carbon-100 dark:text-carbon-300 dark:hover:bg-carbon-800'
+            }`}
+          >
+            ⭐ Favoritos
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => setActiveCategory(cat.id)}
+              className={`truncate rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors ${
+                activeCategory === cat.id
+                  ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300'
+                  : 'text-carbon-600 hover:bg-carbon-100 dark:text-carbon-300 dark:hover:bg-carbon-800'
+              }`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Zona 2: búsqueda + catálogo */}
+      <div className="flex min-w-0 flex-1 flex-col gap-3 overflow-hidden">
         <div className="flex gap-2">
           <input
+            ref={searchRef}
             type="search"
             inputMode="search"
-            placeholder="Buscar producto o escanear código..."
+            placeholder="Buscar producto o escanear código... (F2)"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="border-carbon-200 text-carbon-900 focus:border-brand-500 focus:ring-brand-500/30 dark:border-carbon-700 dark:bg-carbon-900 dark:text-paper min-h-11 flex-1 rounded-xl border bg-white px-4 text-base outline-none focus:ring-2"
@@ -183,16 +282,18 @@ export function POSPage() {
           <button
             type="button"
             onClick={() => setScannerOpen(true)}
-            aria-label="Escanear con cámara"
-            className="bg-brand-600 flex min-h-11 min-w-11 items-center justify-center rounded-xl text-xl text-white hover:brightness-110"
+            aria-label="Escanear con cámara (F3)"
+            title="Escanear con cámara (F3)"
+            className="to-brand-600 flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 text-xl text-white hover:brightness-110 active:scale-[0.97]"
           >
             📷
           </button>
           <button
             type="button"
             onClick={() => setParkedOpen(true)}
-            aria-label="Tickets en espera"
-            className="bg-carbon-100 text-carbon-700 dark:bg-carbon-800 dark:text-carbon-200 flex min-h-11 min-w-11 items-center justify-center rounded-xl text-xl"
+            aria-label="Tickets en espera (F6)"
+            title="Tickets en espera (F6)"
+            className="bg-carbon-100 text-carbon-700 dark:bg-carbon-800 dark:text-carbon-200 flex min-h-11 min-w-11 items-center justify-center rounded-xl text-xl active:scale-[0.97]"
           >
             🅿️
           </button>
@@ -200,39 +301,71 @@ export function POSPage() {
             type="button"
             onClick={() => setPrinterSettingsOpen(true)}
             aria-label="Configurar impresora"
-            className="bg-carbon-100 text-carbon-700 dark:bg-carbon-800 dark:text-carbon-200 flex min-h-11 min-w-11 items-center justify-center rounded-xl text-xl"
+            className="bg-carbon-100 text-carbon-700 dark:bg-carbon-800 dark:text-carbon-200 flex min-h-11 min-w-11 items-center justify-center rounded-xl text-xl active:scale-[0.97]"
           >
             🖨️
           </button>
         </div>
 
+        {/* Chips de categoría — versión horizontal para tablet/móvil donde el rail está oculto */}
+        {categories.length > 0 && !query && (
+          <div className="flex gap-2 overflow-x-auto pb-1 xl:hidden">
+            <button
+              type="button"
+              onClick={() => setActiveCategory(null)}
+              className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium whitespace-nowrap transition-colors ${
+                !activeCategory
+                  ? 'to-brand-600 bg-gradient-to-br from-violet-600 text-white'
+                  : 'bg-carbon-100 text-carbon-600 dark:bg-carbon-800 dark:text-carbon-300'
+              }`}
+            >
+              ⭐ Favoritos
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setActiveCategory(cat.id)}
+                className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium whitespace-nowrap transition-colors ${
+                  activeCategory === cat.id
+                    ? 'to-brand-600 bg-gradient-to-br from-violet-600 text-white'
+                    : 'bg-carbon-100 text-carbon-600 dark:bg-carbon-800 dark:text-carbon-300'
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 flex-1 overflow-y-auto rounded-2xl border bg-white p-3">
-          {query ? (
-            results.length === 0 ? (
-              <p className="text-carbon-400 p-6 text-center text-sm">
-                Sin resultados para "{query}"
-              </p>
-            ) : (
-              <ProductGrid products={results} onPick={handleProductPick} />
-            )
+          {syncing && products.length === 0 ? (
+            <SkeletonList count={6} />
           ) : (
             <>
               <p className="text-carbon-500 dark:text-carbon-400 mb-2 px-1 text-sm font-medium">
-                Favoritos
+                {gridLabel}
               </p>
-              {favorites.length === 0 ? (
-                <p className="text-carbon-400 p-6 text-center text-sm">
-                  Marca productos como favoritos en Inventario para verlos aquí.
-                </p>
+              {gridProducts.length === 0 ? (
+                <EmptyState
+                  icon={query ? '🔍' : '⭐'}
+                  title={query ? 'Sin resultados' : 'Nada por aquí todavía'}
+                  description={
+                    query
+                      ? `No encontramos productos para "${query}".`
+                      : 'Marca productos como favoritos en Inventario para verlos aquí, o elige una categoría.'
+                  }
+                />
               ) : (
-                <ProductGrid products={favorites} onPick={handleProductPick} />
+                <ProductGrid products={gridProducts} onPick={handleProductPick} />
               )}
             </>
           )}
         </div>
       </div>
 
-      <div className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 hidden w-96 shrink-0 rounded-2xl border bg-white md:block">
+      {/* Zona 3: ticket + cobro */}
+      <div className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 hidden w-96 shrink-0 rounded-2xl border bg-white shadow-[var(--shadow-elevated)] md:block">
         <CartPanel
           storeId={storeId}
           canDiscountWithoutPin={canDiscountWithoutPin}
@@ -244,10 +377,10 @@ export function POSPage() {
       <button
         type="button"
         onClick={() => setCartOpenMobile(true)}
-        className="from-brand-600 to-indigo-accent fixed inset-x-4 bottom-20 z-10 flex min-h-11 items-center justify-between rounded-xl bg-gradient-to-br px-4 py-3 text-white shadow-lg md:hidden"
+        className="to-brand-600 fixed inset-x-4 bottom-20 z-10 flex min-h-11 items-center justify-between rounded-xl bg-gradient-to-br from-violet-600 px-4 py-3 text-white shadow-[var(--shadow-floating)] md:hidden"
       >
         <span>{items.length} artículo(s)</span>
-        <span className="font-bold">${total.toFixed(2)}</span>
+        <span className="font-bold tabular-nums">${total.toFixed(2)}</span>
       </button>
 
       <Modal open={cartOpenMobile} onClose={() => setCartOpenMobile(false)} title="Carrito">
@@ -279,7 +412,7 @@ export function POSPage() {
         onConfirm={(quantity) => {
           if (bulkProduct) addProduct(bulkProduct, quantity)
           setBulkProduct(null)
-          playScanBeep()
+          playPop()
           vibrate(30)
         }}
       />
@@ -314,7 +447,7 @@ export function POSPage() {
       >
         {completedReceipt && (
           <div className="flex flex-col gap-4">
-            <p className="text-carbon-900 dark:text-paper text-center text-2xl font-bold">
+            <p className="text-carbon-900 dark:text-paper text-center text-2xl font-bold tabular-nums">
               ${completedReceipt.total.toFixed(2)}
             </p>
             <ReceiptActions data={completedReceipt} />
@@ -354,26 +487,43 @@ function ProductGrid({
   onPick: (product: LocalProduct) => void
 }) {
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {products.map((product) => (
         <button
           key={product.id}
           type="button"
           onClick={() => onPick(product)}
-          className="border-carbon-200 hover:border-brand-400 hover:bg-brand-50 dark:border-carbon-700 dark:bg-carbon-800 dark:hover:bg-carbon-700 flex min-h-20 flex-col items-start justify-between rounded-xl border bg-white p-3 text-left transition-colors"
+          className="group border-carbon-200 hover:border-brand-400 dark:border-carbon-700 dark:bg-carbon-800 flex flex-col overflow-hidden rounded-xl border bg-white text-left transition-all hover:shadow-[var(--shadow-elevated)] active:scale-[0.98]"
         >
-          <span className="text-carbon-900 dark:text-paper line-clamp-2 text-sm font-medium">
-            {product.name}
-          </span>
-          <span className="text-brand-600 dark:text-brand-400 text-sm font-bold">
-            ${product.price.toFixed(2)}
-            {product.unitType !== 'piece' && (
-              <span className="text-carbon-400 text-xs font-normal">
-                {' '}
-                /{UNIT_LABELS[product.unitType]}
-              </span>
-            )}
-          </span>
+          {product.imageUrl ? (
+            <img
+              src={product.imageUrl}
+              alt=""
+              className="h-20 w-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div
+              className={`flex h-20 w-full items-center justify-center bg-gradient-to-br text-2xl font-bold text-white/90 ${tileGradient(product.categoryId ?? product.id)}`}
+              aria-hidden="true"
+            >
+              {product.name.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div className="flex flex-1 flex-col justify-between gap-1 p-2.5">
+            <span className="text-carbon-900 dark:text-paper line-clamp-2 text-sm font-medium">
+              {product.name}
+            </span>
+            <span className="text-brand-600 dark:text-brand-400 text-sm font-bold tabular-nums">
+              ${product.price.toFixed(2)}
+              {product.unitType !== 'piece' && (
+                <span className="text-carbon-400 text-xs font-normal">
+                  {' '}
+                  /{UNIT_LABELS[product.unitType]}
+                </span>
+              )}
+            </span>
+          </div>
         </button>
       ))}
     </div>

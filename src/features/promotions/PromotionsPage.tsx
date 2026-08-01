@@ -2,6 +2,10 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCurrentMember } from '../auth/useCurrentMember'
 import { Button } from '../../components/ui/Button'
+import { Card } from '../../components/ui/Card'
+import { Badge } from '../../components/ui/Badge'
+import { EmptyState } from '../../components/ui/EmptyState'
+import { SkeletonList } from '../../components/ui/Skeleton'
 import { listPromotions, togglePromotion, deletePromotion } from './api'
 import { PromotionFormDialog } from './PromotionFormDialog'
 
@@ -45,49 +49,50 @@ export function PromotionsPage() {
         {canManage && <Button onClick={() => setFormOpen(true)}>+ Promoción</Button>}
       </div>
 
-      <ul className="flex flex-col gap-2">
-        {promotionsQuery.data?.map((promo) => (
-          <li
-            key={promo.id}
-            className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 flex items-center justify-between rounded-xl border bg-white p-4"
-          >
-            <div>
-              <p className="text-carbon-900 dark:text-paper font-medium">{promo.name}</p>
-              <p className="text-carbon-500 dark:text-carbon-400 text-sm">
-                {TYPE_LABELS[promo.type]} ·{' '}
-                {promo.products?.name ?? promo.categories?.name ?? 'N/D'}
-                {promo.value != null &&
-                  ` · ${promo.type === 'percentage' ? `${promo.value}%` : `$${promo.value}`}`}
-              </p>
-            </div>
-            {canManage && (
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => toggleMutation.mutate({ id: promo.id, active: !promo.active })}
-                  className={`min-h-11 rounded-lg px-3 text-sm font-medium ${
-                    promo.active ? 'text-emerald-600 dark:text-emerald-400' : 'text-carbon-400'
-                  }`}
-                >
-                  {promo.active ? 'Activa' : 'Inactiva'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => deleteMutation.mutate(promo.id)}
-                  className="min-h-11 rounded-lg px-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                >
-                  Eliminar
-                </button>
+      {promotionsQuery.isLoading ? (
+        <SkeletonList />
+      ) : promotionsQuery.data?.length === 0 ? (
+        <EmptyState
+          icon="🏷️"
+          title="Sin promociones todavía"
+          description="Crea descuentos por producto o categoría, 2x1, 3x2 o precio por mayoreo."
+        />
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {promotionsQuery.data?.map((promo) => (
+            <Card key={promo.id} className="flex items-center justify-between p-4">
+              <div>
+                <p className="text-carbon-900 dark:text-paper font-medium">{promo.name}</p>
+                <p className="text-carbon-500 dark:text-carbon-400 text-sm tabular-nums">
+                  {TYPE_LABELS[promo.type]} ·{' '}
+                  {promo.products?.name ?? promo.categories?.name ?? 'N/D'}
+                  {promo.value != null &&
+                    ` · ${promo.type === 'percentage' ? `${promo.value}%` : `$${promo.value}`}`}
+                </p>
               </div>
-            )}
-          </li>
-        ))}
-        {promotionsQuery.data?.length === 0 && (
-          <p className="text-carbon-400 text-center text-sm">
-            Todavía no hay promociones configuradas.
-          </p>
-        )}
-      </ul>
+              {canManage && (
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => toggleMutation.mutate({ id: promo.id, active: !promo.active })}
+                  >
+                    <Badge tone={promo.active ? 'success' : 'neutral'} dot>
+                      {promo.active ? 'Activa' : 'Inactiva'}
+                    </Badge>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deleteMutation.mutate(promo.id)}
+                    className="min-h-9 rounded-lg px-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              )}
+            </Card>
+          ))}
+        </ul>
+      )}
 
       <PromotionFormDialog open={formOpen} onClose={() => setFormOpen(false)} storeId={storeId} />
     </div>

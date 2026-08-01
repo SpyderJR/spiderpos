@@ -6,7 +6,7 @@ export async function syncProducts(storeId: string): Promise<number> {
   const { data, error } = await supabase
     .from('products')
     .select(
-      'id, store_id, category_id, barcode, name, price, cost, stock, unit_type, min_stock, is_favorite, image_url, active',
+      'id, store_id, category_id, barcode, name, price, cost, stock, unit_type, min_stock, is_favorite, image_url, active, categories(name)',
     )
     .eq('store_id', storeId)
     .eq('active', true)
@@ -17,6 +17,7 @@ export async function syncProducts(storeId: string): Promise<number> {
     id: p.id,
     storeId: p.store_id,
     categoryId: p.category_id,
+    categoryName: p.categories?.name ?? null,
     barcode: p.barcode,
     name: p.name,
     price: p.price,

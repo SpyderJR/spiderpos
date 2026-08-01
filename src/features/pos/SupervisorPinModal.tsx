@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Modal } from '../../components/ui/Modal'
 import { Button } from '../../components/ui/Button'
 import { verifySupervisorPin } from './api'
-import { playErrorTone, vibrate } from './sensoryFeedback'
+import { playErrorTone, vibrate } from '../../lib/sound'
 
 interface SupervisorPinModalProps {
   open: boolean

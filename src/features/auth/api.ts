@@ -13,6 +13,20 @@ export async function signOut() {
   if (error) throw error
 }
 
+export interface ActiveStaffMember {
+  id: string
+  full_name: string
+  role: 'owner' | 'manager' | 'cashier'
+}
+
+/** Solo nombre + rol, sin sesión — mismo nivel de exposición que un
+ * gafete físico, usado para el selector de avatar antes del PIN. */
+export async function listActiveStaff(storeId: string): Promise<ActiveStaffMember[]> {
+  const { data, error } = await supabase.rpc('list_active_staff', { p_store_id: storeId })
+  if (error) throw error
+  return data
+}
+
 const pinLoginResponseSchema = z.object({
   email: z.email(),
   token_hash: z.string(),

@@ -48,6 +48,6 @@ describe('App', () => {
       </QueryClientProvider>,
     )
 
-    expect(await screen.findByText(/ingresa tu pin de empleado/i)).toBeInTheDocument()
+    expect(await screen.findByText(/ingresa tu pin/i)).toBeInTheDocument()
   })
 })

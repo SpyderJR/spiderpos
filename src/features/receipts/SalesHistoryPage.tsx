@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useCurrentMember } from '../auth/useCurrentMember'
-import { Modal } from '../../components/ui/Modal'
+import { Drawer } from '../../components/ui/Drawer'
+import { Card } from '../../components/ui/Card'
+import { Badge, type BadgeTone } from '../../components/ui/Badge'
+import { EmptyState } from '../../components/ui/EmptyState'
+import { SkeletonList } from '../../components/ui/Skeleton'
 import { Button } from '../../components/ui/Button'
 import { listSales, fetchReceiptData } from './api'
 import { ReceiptActions } from './ReceiptActions'
@@ -22,6 +26,14 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: 'Cancelada',
   returned: 'Devuelta',
   partially_returned: 'Devuelta parcial',
+}
+
+const STATUS_TONES: Record<string, BadgeTone> = {
+  completed: 'success',
+  parked: 'info',
+  cancelled: 'critical',
+  returned: 'warning',
+  partially_returned: 'warning',
 }
 
 export function SalesHistoryPage() {
@@ -60,18 +72,21 @@ export function SalesHistoryPage() {
     <div className="mx-auto flex max-w-2xl flex-col gap-4">
       <h1 className="text-carbon-900 dark:text-paper text-2xl font-bold">Ventas</h1>
 
-      {salesQuery.isLoading && <p className="text-carbon-500 dark:text-carbon-400">Cargando...</p>}
+      {salesQuery.isLoading && <SkeletonList />}
       {salesQuery.data?.length === 0 && (
-        <p className="text-carbon-400 text-center text-sm">Todavía no hay ventas registradas.</p>
+        <EmptyState
+          icon="🧾"
+          title="Sin ventas todavía"
+          description="Aquí verás cada venta registrada."
+        />
       )}
 
       <ul className="flex flex-col gap-2">
         {salesQuery.data?.map((sale) => (
           <li key={sale.id}>
-            <button
-              type="button"
+            <Card
+              className="hover:border-brand-400 flex w-full cursor-pointer items-center justify-between p-4 text-left transition-colors"
               onClick={() => setSelectedSaleId(sale.id)}
-              className="border-carbon-200 hover:border-brand-400 dark:border-carbon-800 dark:bg-carbon-900 flex w-full items-center justify-between rounded-xl border bg-white p-4 text-left"
             >
               <div>
                 <p className="text-carbon-900 dark:text-paper font-medium">
@@ -80,20 +95,24 @@ export function SalesHistoryPage() {
                 <p className="text-carbon-500 dark:text-carbon-400 text-sm">
                   {new Date(sale.clientCreatedAt).toLocaleString('es-MX')} · {sale.cashierName}
                 </p>
-                <p className="text-carbon-400 text-xs">
-                  {sale.paymentMethods.map((m) => METHOD_LABELS[m] ?? m).join(' + ')} ·{' '}
-                  {STATUS_LABELS[sale.status] ?? sale.status}
-                </p>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="text-carbon-400 text-xs">
+                    {sale.paymentMethods.map((m) => METHOD_LABELS[m] ?? m).join(' + ')}
+                  </span>
+                  <Badge tone={STATUS_TONES[sale.status] ?? 'neutral'}>
+                    {STATUS_LABELS[sale.status] ?? sale.status}
+                  </Badge>
+                </div>
               </div>
-              <p className="text-carbon-900 dark:text-paper text-lg font-bold">
+              <p className="text-carbon-900 dark:text-paper text-lg font-bold tabular-nums">
                 ${sale.total.toFixed(2)}
               </p>
-            </button>
+            </Card>
           </li>
         ))}
       </ul>
 
-      <Modal
+      <Drawer
         open={!!selectedSaleId}
         onClose={() => setSelectedSaleId(null)}
         title="Detalle de venta"
@@ -103,7 +122,7 @@ export function SalesHistoryPage() {
         )}
         {receiptQuery.data && (
           <div className="flex flex-col gap-4">
-            <div>
+            <Card className="p-4">
               <p className="text-carbon-500 dark:text-carbon-400 text-sm">
                 Folio {receiptQuery.data.folio} ·{' '}
                 {new Date(receiptQuery.data.createdAt).toLocaleString('es-MX')}
@@ -114,15 +133,15 @@ export function SalesHistoryPage() {
                     <span>
                       {item.quantity} x {item.name}
                     </span>
-                    <span>${item.subtotal.toFixed(2)}</span>
+                    <span className="tabular-nums">${item.subtotal.toFixed(2)}</span>
                   </li>
                 ))}
               </ul>
-              <div className="border-carbon-100 text-carbon-900 dark:border-carbon-800 dark:text-paper mt-2 flex justify-between border-t pt-2 font-bold">
+              <div className="border-carbon-100 text-carbon-900 dark:border-carbon-800 dark:text-paper mt-2 flex justify-between border-t pt-2 text-lg font-bold tabular-nums">
                 <span>Total</span>
                 <span>${receiptQuery.data.total.toFixed(2)}</span>
               </div>
-            </div>
+            </Card>
             <ReceiptActions data={receiptQuery.data} />
 
             {canModify && canProcessReturns && (
@@ -151,7 +170,7 @@ export function SalesHistoryPage() {
             )}
           </div>
         )}
-      </Modal>
+      </Drawer>
 
       <ReturnDialog
         saleId={returnSaleId}

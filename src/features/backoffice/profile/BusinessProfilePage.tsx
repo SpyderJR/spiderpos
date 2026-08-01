@@ -103,7 +103,7 @@ export function BusinessProfilePage() {
         </p>
       </div>
 
-      <section className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 flex items-center gap-4 rounded-2xl border bg-white p-4">
+      <section className="border-carbon-100 dark:border-carbon-800 dark:bg-carbon-900 flex items-center gap-4 rounded-2xl border bg-white p-4 shadow-[var(--shadow-soft)]">
         {store.logo_url ? (
           <img
             src={store.logo_url}
@@ -151,7 +151,11 @@ export function BusinessProfilePage() {
           Solo el dueño de la tienda puede editar el perfil comercial.
         </p>
       ) : (
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="border-carbon-100 dark:border-carbon-800 dark:bg-carbon-900 flex flex-col gap-4 rounded-2xl border bg-white p-6 shadow-[var(--shadow-soft)]"
+          noValidate
+        >
           <TextField
             label="Nombre del negocio"
             error={errors.name?.message}

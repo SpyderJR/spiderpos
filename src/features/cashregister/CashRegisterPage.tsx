@@ -2,7 +2,12 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCurrentMember } from '../auth/useCurrentMember'
 import { Button } from '../../components/ui/Button'
+import { Card } from '../../components/ui/Card'
+import { Badge } from '../../components/ui/Badge'
+import { EmptyState } from '../../components/ui/EmptyState'
 import { Modal } from '../../components/ui/Modal'
+import { BlindCountFlow } from './BlindCountFlow'
+import { playConfirm } from '../../lib/sound'
 import {
   fetchOpenShift,
   listShiftHistory,
@@ -10,6 +15,7 @@ import {
   closeShift,
   listMovements,
   addMovement,
+  fetchShiftSalesSummary,
 } from './api'
 
 export function CashRegisterPage() {
@@ -25,7 +31,6 @@ export function CashRegisterPage() {
   const [movementAmount, setMovementAmount] = useState('')
   const [movementReason, setMovementReason] = useState('')
   const [closeDialog, setCloseDialog] = useState(false)
-  const [countedAmount, setCountedAmount] = useState('')
   const [closeResult, setCloseResult] = useState<{
     theoretical: number
     counted: number
@@ -42,6 +47,12 @@ export function CashRegisterPage() {
     queryKey: ['movements', shiftQuery.data?.id],
     queryFn: () => listMovements(shiftQuery.data!.id),
     enabled: !!shiftQuery.data,
+  })
+
+  const salesQuery = useQuery({
+    queryKey: ['shift-sales', shiftQuery.data?.id],
+    queryFn: () => fetchShiftSalesSummary(storeId!, employeeId!, shiftQuery.data!.opening_at),
+    enabled: !!shiftQuery.data && !!storeId && !!employeeId,
   })
 
   const historyQuery = useQuery({
@@ -77,9 +88,10 @@ export function CashRegisterPage() {
   })
 
   const closeMutation = useMutation({
-    mutationFn: () => closeShift(shiftQuery.data!.id, Number.parseFloat(countedAmount)),
+    mutationFn: (countedAmount: number) => closeShift(shiftQuery.data!.id, countedAmount),
     onSuccess: (result) => {
       setCloseResult(result)
+      playConfirm()
       queryClient.invalidateQueries({ queryKey: ['open-shift', storeId, employeeId] })
       queryClient.invalidateQueries({ queryKey: ['shift-history', storeId] })
     },
@@ -94,82 +106,119 @@ export function CashRegisterPage() {
       <h1 className="text-carbon-900 dark:text-paper text-2xl font-bold">Caja</h1>
 
       {!shift ? (
-        <div className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 rounded-2xl border bg-white p-6 text-center">
-          <p className="text-carbon-500 dark:text-carbon-400 mb-4">No tienes un turno abierto.</p>
-          <Button onClick={() => setOpenDialog(true)}>Abrir turno</Button>
-        </div>
+        <Card className="p-8">
+          <EmptyState
+            icon="🗄️"
+            title="No tienes un turno abierto"
+            description="Abre un turno para empezar a vender y registrar movimientos de efectivo."
+            action={<Button onClick={() => setOpenDialog(true)}>Abrir turno</Button>}
+          />
+        </Card>
       ) : (
-        <div className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 rounded-2xl border bg-white p-6">
-          <p className="text-carbon-500 dark:text-carbon-400 text-sm">
-            Turno abierto desde {new Date(shift.opening_at).toLocaleString('es-MX')}
-          </p>
-          <p className="text-carbon-900 dark:text-paper text-2xl font-bold">
-            Fondo inicial: ${shift.opening_amount.toFixed(2)}
-          </p>
-
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <Button variant="secondary" onClick={() => setMovementDialog('in')}>
-              + Entrada
-            </Button>
-            <Button variant="secondary" onClick={() => setMovementDialog('out')}>
-              − Salida
-            </Button>
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <Card className="p-4">
+              <p className="text-carbon-400 text-xs font-medium">Fondo inicial</p>
+              <p className="text-carbon-900 dark:text-paper text-2xl font-bold tabular-nums">
+                ${shift.opening_amount.toFixed(2)}
+              </p>
+            </Card>
+            <Card className="p-4">
+              <p className="text-carbon-400 text-xs font-medium">Ventas del turno</p>
+              <p className="text-carbon-900 dark:text-paper text-2xl font-bold tabular-nums">
+                {salesQuery.data?.count ?? 0}
+              </p>
+              <p className="text-carbon-500 dark:text-carbon-400 text-xs tabular-nums">
+                ${(salesQuery.data?.total ?? 0).toFixed(2)} vendidos
+              </p>
+            </Card>
           </div>
 
-          {movementsQuery.data && movementsQuery.data.length > 0 && (
-            <ul className="border-carbon-100 dark:border-carbon-800 mt-4 flex flex-col gap-1 border-t pt-3 text-sm">
-              {movementsQuery.data.map((m) => (
-                <li key={m.id} className="flex justify-between">
-                  <span className="text-carbon-600 dark:text-carbon-300">
-                    {m.type === 'in' ? '➕' : '➖'} {m.reason}
-                  </span>
-                  <span>${m.amount.toFixed(2)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+          <Card className="p-5">
+            <div className="mb-1 flex items-center justify-between">
+              <Badge tone="success" dot>
+                Turno abierto
+              </Badge>
+              <span className="text-carbon-400 text-xs">
+                desde {new Date(shift.opening_at).toLocaleString('es-MX')}
+              </span>
+            </div>
 
-          <Button className="mt-4 w-full" onClick={() => setCloseDialog(true)}>
-            Cerrar turno (corte de caja)
-          </Button>
-        </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <Button variant="secondary" onClick={() => setMovementDialog('in')}>
+                🟢 + Entrada
+              </Button>
+              <Button variant="secondary" onClick={() => setMovementDialog('out')}>
+                🔴 − Salida
+              </Button>
+            </div>
+
+            {movementsQuery.data && movementsQuery.data.length > 0 && (
+              <ul className="border-carbon-100 dark:border-carbon-800 mt-4 flex flex-col gap-2 border-t pt-3">
+                {movementsQuery.data.map((m) => (
+                  <li key={m.id} className="flex items-center justify-between text-sm">
+                    <span className="text-carbon-600 dark:text-carbon-300 flex items-center gap-2">
+                      <span
+                        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${
+                          m.type === 'in'
+                            ? 'bg-emerald-100 dark:bg-emerald-950/40'
+                            : 'bg-red-100 dark:bg-red-950/40'
+                        }`}
+                        aria-hidden="true"
+                      >
+                        {m.type === 'in' ? '➕' : '➖'}
+                      </span>
+                      {m.reason}
+                    </span>
+                    <span className="font-semibold tabular-nums">${m.amount.toFixed(2)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <Button className="mt-4 w-full" onClick={() => setCloseDialog(true)}>
+              Cerrar turno (corte de caja)
+            </Button>
+          </Card>
+        </>
       )}
 
-      {canViewHistory && historyQuery.data && historyQuery.data.length > 0 && (
+      {canViewHistory && (
         <div>
           <h2 className="text-carbon-900 dark:text-paper mb-2 text-lg font-bold">
             Historial de arqueos
           </h2>
-          <ul className="flex flex-col gap-2">
-            {historyQuery.data.map((s) => (
-              <li
-                key={s.id}
-                className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 flex items-center justify-between rounded-xl border bg-white p-3 text-sm"
-              >
-                <div>
-                  <p className="text-carbon-900 dark:text-paper font-medium">
-                    {s.store_members?.full_name} ·{' '}
-                    {new Date(s.closing_at!).toLocaleDateString('es-MX')}
-                  </p>
-                  <p className="text-carbon-500 dark:text-carbon-400">
-                    Teórico ${s.closing_amount_theoretical?.toFixed(2)} · Contado $
-                    {s.closing_amount_counted?.toFixed(2)}
-                  </p>
-                </div>
-                <span
-                  className={`font-bold ${
-                    (s.difference ?? 0) === 0
-                      ? 'text-carbon-400'
-                      : (s.difference ?? 0) > 0
-                        ? 'text-emerald-600 dark:text-emerald-400'
-                        : 'text-red-600 dark:text-red-400'
-                  }`}
-                >
-                  {(s.difference ?? 0) > 0 ? '+' : ''}${(s.difference ?? 0).toFixed(2)}
-                </span>
-              </li>
-            ))}
-          </ul>
+          {!historyQuery.data || historyQuery.data.length === 0 ? (
+            <EmptyState icon="📋" title="Todavía no hay cortes registrados" />
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {historyQuery.data.map((s) => (
+                <Card key={s.id} className="flex items-center justify-between p-3.5">
+                  <div>
+                    <p className="text-carbon-900 dark:text-paper text-sm font-medium">
+                      {s.store_members?.full_name} ·{' '}
+                      {new Date(s.closing_at!).toLocaleDateString('es-MX')}
+                    </p>
+                    <p className="text-carbon-500 dark:text-carbon-400 text-xs tabular-nums">
+                      Teórico ${s.closing_amount_theoretical?.toFixed(2)} · Contado $
+                      {s.closing_amount_counted?.toFixed(2)}
+                    </p>
+                  </div>
+                  <Badge
+                    tone={
+                      (s.difference ?? 0) === 0
+                        ? 'neutral'
+                        : (s.difference ?? 0) > 0
+                          ? 'success'
+                          : 'critical'
+                    }
+                  >
+                    {(s.difference ?? 0) > 0 ? '+' : ''}${(s.difference ?? 0).toFixed(2)}
+                  </Badge>
+                </Card>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 
@@ -182,7 +231,7 @@ export function CashRegisterPage() {
             placeholder="Fondo de caja inicial"
             value={openingAmount}
             onChange={(e) => setOpeningAmount(e.target.value)}
-            className="border-carbon-200 dark:border-carbon-700 dark:bg-carbon-900 rounded-xl border px-4 py-3 text-center text-2xl"
+            className="border-carbon-200 dark:border-carbon-700 dark:bg-carbon-900 rounded-xl border px-4 py-3 text-center text-2xl tabular-nums"
           />
           <Button
             onClick={() => openMutation.mutate()}
@@ -206,7 +255,7 @@ export function CashRegisterPage() {
             placeholder="Monto"
             value={movementAmount}
             onChange={(e) => setMovementAmount(e.target.value)}
-            className="border-carbon-200 dark:border-carbon-700 dark:bg-carbon-900 rounded-xl border px-4 py-3 text-center text-xl"
+            className="border-carbon-200 dark:border-carbon-700 dark:bg-carbon-900 rounded-xl border px-4 py-3 text-center text-xl tabular-nums"
           />
           <input
             placeholder="Motivo (obligatorio)"
@@ -230,34 +279,14 @@ export function CashRegisterPage() {
         onClose={() => {
           setCloseDialog(false)
           setCloseResult(null)
-          setCountedAmount('')
         }}
         title="Corte de caja"
       >
         {!closeResult ? (
-          <div className="flex flex-col gap-4">
-            <p className="text-carbon-500 dark:text-carbon-400 text-sm">
-              Cuenta el efectivo físico en el cajón y captura el total. No verás el monto teórico
-              hasta confirmar.
-            </p>
-            <input
-              type="number"
-              inputMode="decimal"
-              autoFocus
-              placeholder="Efectivo contado"
-              value={countedAmount}
-              onChange={(e) => setCountedAmount(e.target.value)}
-              className="border-carbon-200 dark:border-carbon-700 dark:bg-carbon-900 rounded-xl border px-4 py-3 text-center text-2xl"
-            />
-            <Button
-              onClick={() => closeMutation.mutate()}
-              disabled={!(Number.parseFloat(countedAmount) >= 0)}
-              loading={closeMutation.isPending}
-              className="w-full"
-            >
-              Confirmar conteo y cerrar turno
-            </Button>
-          </div>
+          <BlindCountFlow
+            onComplete={(total) => closeMutation.mutate(total)}
+            onCancel={() => setCloseDialog(false)}
+          />
         ) : (
           <div className="flex flex-col gap-3 text-center">
             <p className="text-carbon-500 dark:text-carbon-400 text-sm">
@@ -267,7 +296,7 @@ export function CashRegisterPage() {
               Contado: ${closeResult.counted.toFixed(2)}
             </p>
             <p
-              className={`text-3xl font-bold ${
+              className={`text-3xl font-bold tabular-nums ${
                 closeResult.difference === 0
                   ? 'text-carbon-900 dark:text-paper'
                   : closeResult.difference > 0
@@ -285,7 +314,6 @@ export function CashRegisterPage() {
               onClick={() => {
                 setCloseDialog(false)
                 setCloseResult(null)
-                setCountedAmount('')
               }}
               className="w-full"
             >

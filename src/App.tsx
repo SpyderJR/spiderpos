@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { RootRedirect } from './features/auth/RootRedirect'
 import { ProtectedRoute } from './features/auth/ProtectedRoute'
+import { Toaster } from './components/ui/Toaster'
 
 const LoginPage = lazy(() =>
   import('./features/auth/LoginPage').then((m) => ({ default: m.LoginPage })),
@@ -86,6 +87,7 @@ function RouteFallback() {
 function App() {
   return (
     <BrowserRouter>
+      <Toaster />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<RootRedirect />} />

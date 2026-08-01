@@ -68,33 +68,50 @@ export function CustomerStatementModal({
   return (
     <Modal open={!!customer} onClose={onClose} title={`Estado de cuenta — ${customer.name}`}>
       <div className="flex flex-col gap-4">
-        <div className="bg-carbon-50 dark:bg-carbon-800 rounded-xl p-4 text-center">
-          <p className="text-carbon-500 dark:text-carbon-400 text-sm">Saldo actual</p>
-          <p className="text-carbon-900 dark:text-paper text-2xl font-bold">
-            ${customer.credit_balance.toFixed(2)}
+        <div className="to-brand-600 rounded-xl bg-gradient-to-br from-violet-600 p-4 text-center text-white">
+          <p className="text-sm text-white/80">Saldo actual</p>
+          <p className="text-2xl font-bold tabular-nums">${customer.credit_balance.toFixed(2)}</p>
+          <p className="text-xs text-white/70 tabular-nums">
+            Límite: ${customer.credit_limit.toFixed(2)}
           </p>
-          <p className="text-carbon-400 text-xs">Límite: ${customer.credit_limit.toFixed(2)}</p>
         </div>
 
         {statementQuery.isLoading && (
           <p className="text-carbon-500 dark:text-carbon-400 text-sm">Cargando...</p>
         )}
 
-        <ul className="flex max-h-56 flex-col gap-1 overflow-y-auto">
-          {statementQuery.data?.map((entry) => (
-            <li key={entry.id} className="flex justify-between text-sm">
-              <span className="text-carbon-600 dark:text-carbon-300">
-                {new Date(entry.date).toLocaleDateString('es-MX')} · {entry.description}
-              </span>
+        <ul className="flex max-h-56 flex-col overflow-y-auto">
+          {statementQuery.data?.map((entry, i) => (
+            <li key={entry.id} className="relative flex gap-3 pb-4 pl-1 text-sm last:pb-0">
+              {i < statementQuery.data.length - 1 && (
+                <span
+                  className="bg-carbon-200 dark:bg-carbon-700 absolute top-3 left-[5px] h-full w-px"
+                  aria-hidden="true"
+                />
+              )}
               <span
-                className={
-                  entry.amount < 0
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-carbon-900 dark:text-paper'
-                }
-              >
-                {entry.amount < 0 ? '-' : ''}${Math.abs(entry.amount).toFixed(2)}
-              </span>
+                className={`relative mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${
+                  entry.amount < 0 ? 'bg-emerald-500' : 'bg-carbon-400'
+                }`}
+                aria-hidden="true"
+              />
+              <div className="flex flex-1 items-center justify-between gap-2">
+                <div>
+                  <p className="text-carbon-800 dark:text-carbon-200">{entry.description}</p>
+                  <p className="text-carbon-400 text-xs">
+                    {new Date(entry.date).toLocaleDateString('es-MX')}
+                  </p>
+                </div>
+                <span
+                  className={`font-semibold tabular-nums ${
+                    entry.amount < 0
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-carbon-900 dark:text-paper'
+                  }`}
+                >
+                  {entry.amount < 0 ? '-' : ''}${Math.abs(entry.amount).toFixed(2)}
+                </span>
+              </div>
             </li>
           ))}
           {statementQuery.data?.length === 0 && (
@@ -140,7 +157,10 @@ export function CustomerStatementModal({
             <Button variant="secondary" loading={exportingPdf} onClick={exportPdf}>
               📄 PDF
             </Button>
-            <Button variant="secondary" onClick={collectWhatsApp}>
+            <Button
+              onClick={collectWhatsApp}
+              className="bg-[#25D366] bg-none! text-white shadow-none! hover:brightness-105"
+            >
               💬 Cobrar
             </Button>
           </div>

@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCurrentMember } from '../../auth/useCurrentMember'
 import { Button } from '../../../components/ui/Button'
+import { Card } from '../../../components/ui/Card'
+import { Badge } from '../../../components/ui/Badge'
+import { SkeletonList } from '../../../components/ui/Skeleton'
 import { listStaff, updateStaffMember, deleteStaffMember } from './api'
 import { PERMISSION_KEYS, PERMISSION_LABELS } from '../permissions'
 import { CreateStaffDialog } from './CreateStaffDialog'
@@ -62,23 +65,32 @@ export function StaffPage() {
         </p>
       )}
 
-      {staffQuery.isLoading && <p className="text-carbon-500 dark:text-carbon-400">Cargando...</p>}
+      {staffQuery.isLoading && <SkeletonList />}
 
       <ul className="flex flex-col gap-3">
         {staffQuery.data?.map((member) => {
           const permissions = (member.permissions as Record<string, boolean>) ?? {}
           const isExpanded = expandedId === member.id
           return (
-            <li
-              key={member.id}
-              className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 rounded-2xl border bg-white p-4"
-            >
+            <Card key={member.id} className="p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-carbon-900 dark:text-paper font-medium">{member.full_name}</p>
-                  <p className="text-carbon-500 dark:text-carbon-400 text-sm">
-                    {ROLE_LABELS[member.role]} · {member.active ? 'Activo' : 'Inactivo'}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <span className="to-brand-600 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 text-sm font-bold text-white">
+                    {member.full_name.charAt(0).toUpperCase()}
+                  </span>
+                  <div>
+                    <p className="text-carbon-900 dark:text-paper font-medium">
+                      {member.full_name}
+                    </p>
+                    <div className="mt-0.5 flex items-center gap-1.5">
+                      <span className="text-carbon-500 dark:text-carbon-400 text-sm">
+                        {ROLE_LABELS[member.role]}
+                      </span>
+                      <Badge tone={member.active ? 'success' : 'neutral'} dot>
+                        {member.active ? 'Activo' : 'Inactivo'}
+                      </Badge>
+                    </div>
+                  </div>
                 </div>
                 {canManage && member.role !== 'owner' && (
                   <div className="flex flex-wrap items-center gap-1 sm:justify-end">
@@ -149,7 +161,7 @@ export function StaffPage() {
                   Los gerentes tienen acceso completo por defecto.
                 </p>
               )}
-            </li>
+            </Card>
           )
         })}
       </ul>

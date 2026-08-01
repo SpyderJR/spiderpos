@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/Button'
 import {
   createProduct,
   updateProduct,
+  uploadProductImage,
   listCategories,
   createCategory,
   listVariants,
@@ -100,6 +101,11 @@ export function ProductFormDialog({ open, onClose, storeId, product }: ProductFo
   const [variantName, setVariantName] = useState('')
   const [variantFactor, setVariantFactor] = useState('')
   const [variantPrice, setVariantPrice] = useState('')
+  // Inicializados directamente (sin efecto) — el componente se remonta por
+  // `key` en el call site cada vez que el diálogo se abre, así que estos
+  // valores ya nacen correctos para el producto actual.
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(product?.image_url ?? null)
 
   const saveMutation = useMutation({
     mutationFn: async (values: FormValues) => {
@@ -121,10 +127,13 @@ export function ProductFormDialog({ open, onClose, storeId, product }: ProductFo
         active: values.active,
       }
 
-      if (isEdit) {
-        await updateProduct(product.id, payload)
-      } else {
-        await createProduct({ ...payload, store_id: storeId, stock: 0 })
+      const savedId = isEdit
+        ? (await updateProduct(product.id, payload)).id
+        : (await createProduct({ ...payload, store_id: storeId, stock: 0 })).id
+
+      if (imageFile) {
+        const url = await uploadProductImage(storeId, savedId, imageFile)
+        await updateProduct(savedId, { image_url: url })
       }
     },
     onSuccess: () => {
@@ -165,6 +174,38 @@ export function ProductFormDialog({ open, onClose, storeId, product }: ProductFo
         className="flex flex-col gap-4"
         noValidate
       >
+        <div className="flex items-center gap-3">
+          <label
+            htmlFor="product-photo"
+            className="border-carbon-200 dark:border-carbon-700 bg-carbon-50 dark:bg-carbon-800 relative flex h-16 w-16 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border"
+          >
+            {imagePreview ? (
+              <img src={imagePreview} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-2xl" aria-hidden="true">
+                📷
+              </span>
+            )}
+            <input
+              id="product-photo"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="sr-only"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                setImageFile(file)
+                setImagePreview(URL.createObjectURL(file))
+              }}
+            />
+          </label>
+          <div className="text-carbon-500 dark:text-carbon-400 text-sm">
+            <p className="font-medium">Foto del producto</p>
+            <p>Toca para tomarla con la cámara o elegir de la galería.</p>
+          </div>
+        </div>
+
         <TextField label="Nombre" error={errors.name?.message} {...register('name')} />
         <TextField
           label="Código de barras (opcional)"

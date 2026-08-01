@@ -1507,6 +1507,14 @@ export type Database = {
       get_platform_metrics: { Args: never; Returns: Json }
       hash_pin: { Args: { p_pin: string }; Returns: string }
       is_platform_admin: { Args: never; Returns: boolean }
+      list_active_staff: {
+        Args: { p_store_id: string }
+        Returns: {
+          full_name: string
+          id: string
+          role: Database['public']['Enums']['store_role']
+        }[]
+      }
       list_platform_tenants: {
         Args: never
         Returns: {

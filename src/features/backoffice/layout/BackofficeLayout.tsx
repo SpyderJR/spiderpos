@@ -1,8 +1,11 @@
 import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Logo } from '../../../components/Logo'
+import { PageTransition } from '../../../components/PageTransition'
 import { ConnectionStatus } from '../../../components/ConnectionStatus'
 import { ThemeToggle } from '../../../components/ThemeToggle'
+import { SoundToggle } from '../../../components/SoundToggle'
+import { FullscreenToggle } from '../../../components/FullscreenToggle'
 import { Modal } from '../../../components/ui/Modal'
 import { useCurrentMember } from '../../auth/useCurrentMember'
 import { signOut } from '../../auth/api'
@@ -35,6 +38,7 @@ const ALL_NAV = [...PRIMARY_NAV, ...SECONDARY_NAV]
 export function BackofficeLayout() {
   const { data: member } = useCurrentMember()
   const [moreOpen, setMoreOpen] = useState(false)
+  const location = useLocation()
   useOfflineSync(member?.store_id)
 
   return (
@@ -68,7 +72,7 @@ export function BackofficeLayout() {
           </nav>
         </aside>
 
-        <div className="flex flex-1 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col">
           <header className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 flex items-center justify-between border-b bg-white px-4 py-3">
             <div className="flex items-center gap-2 md:hidden">
               <Logo className="h-8 w-8" />
@@ -82,6 +86,8 @@ export function BackofficeLayout() {
             <div className="flex items-center gap-1.5 sm:gap-3">
               <NotificationCenter storeId={member?.store_id} />
               <ConnectionStatus />
+              <SoundToggle />
+              <FullscreenToggle />
               <ThemeToggle />
               <div className="hidden text-right text-sm md:block">
                 <p className="text-carbon-800 dark:text-carbon-100 font-medium">
@@ -109,7 +115,9 @@ export function BackofficeLayout() {
                 }
               />
             )}
-            <Outlet />
+            <PageTransition pageKey={location.pathname}>
+              <Outlet />
+            </PageTransition>
           </main>
 
           <nav className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 fixed inset-x-0 bottom-0 z-10 flex border-t bg-white md:hidden">

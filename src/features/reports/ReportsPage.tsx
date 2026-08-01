@@ -16,6 +16,7 @@ import {
 import { useCurrentMember } from '../auth/useCurrentMember'
 import { useThemeStore } from '../../store/useThemeStore'
 import { Button } from '../../components/ui/Button'
+import { Card } from '../../components/ui/Card'
 import { fetchReportData } from './api'
 import { exportSalesCsv } from './csvExport'
 import { StatTile } from './StatTile'
@@ -67,12 +68,21 @@ export function ReportsPage() {
 
   const [preset, setPreset] = useState<(typeof PRESETS)[number]['key']>('7d')
 
-  const { from, to } = useMemo(() => {
+  const { from, to, prevFrom, prevTo } = useMemo(() => {
     const now = new Date()
     const start = new Date(now)
-    if (preset === '7d') start.setDate(now.getDate() - 6)
-    if (preset === '30d') start.setDate(now.getDate() - 29)
-    return { from: startOfDay(start), to: endOfDay(now) }
+    const days = preset === '7d' ? 6 : preset === '30d' ? 29 : 0
+    start.setDate(now.getDate() - days)
+    const prevEnd = new Date(start)
+    prevEnd.setDate(start.getDate() - 1)
+    const prevStart = new Date(prevEnd)
+    prevStart.setDate(prevEnd.getDate() - days)
+    return {
+      from: startOfDay(start),
+      to: endOfDay(now),
+      prevFrom: startOfDay(prevStart),
+      prevTo: endOfDay(prevEnd),
+    }
   }, [preset])
 
   const reportQuery = useQuery({
@@ -80,6 +90,18 @@ export function ReportsPage() {
     queryFn: () => fetchReportData({ storeId: storeId!, from, to }),
     enabled: !!storeId,
   })
+
+  const prevReportQuery = useQuery({
+    queryKey: ['report', storeId, prevFrom, prevTo],
+    queryFn: () => fetchReportData({ storeId: storeId!, from: prevFrom, to: prevTo }),
+    enabled: !!storeId,
+  })
+
+  function trendPct(current: number, previous: number | undefined): number | undefined {
+    if (previous === undefined) return undefined
+    if (previous === 0) return current > 0 ? 100 : 0
+    return ((current - previous) / previous) * 100
+  }
 
   if (!storeId) return null
 
@@ -112,16 +134,16 @@ export function ReportsPage() {
         </Button>
       </div>
 
-      <div className="flex gap-2">
+      <div className="bg-carbon-100 dark:bg-carbon-800 inline-flex w-fit gap-0.5 rounded-xl p-1">
         {PRESETS.map((p) => (
           <button
             key={p.key}
             type="button"
             onClick={() => setPreset(p.key)}
-            className={`min-h-11 rounded-xl px-4 text-sm font-medium ${
+            className={`min-h-9 rounded-lg px-4 text-sm font-medium transition-all ${
               preset === p.key
-                ? 'bg-brand-600 text-white'
-                : 'bg-carbon-100 text-carbon-700 dark:bg-carbon-800 dark:text-carbon-200'
+                ? 'to-brand-600 bg-gradient-to-br from-violet-600 text-white shadow-sm'
+                : 'text-carbon-600 dark:text-carbon-300'
             }`}
           >
             {p.label}
@@ -134,20 +156,33 @@ export function ReportsPage() {
       {data && (
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatTile label="Ventas totales" value={`$${data.totalSales.toFixed(2)}`} />
-            <StatTile label="Tickets" value={String(data.saleCount)} />
-            <StatTile label="Ticket promedio" value={`$${data.averageTicket.toFixed(2)}`} />
+            <StatTile
+              label="Ventas totales"
+              value={`$${data.totalSales.toFixed(2)}`}
+              trendPct={trendPct(data.totalSales, prevReportQuery.data?.totalSales)}
+            />
+            <StatTile
+              label="Tickets"
+              value={String(data.saleCount)}
+              trendPct={trendPct(data.saleCount, prevReportQuery.data?.saleCount)}
+            />
+            <StatTile
+              label="Ticket promedio"
+              value={`$${data.averageTicket.toFixed(2)}`}
+              trendPct={trendPct(data.averageTicket, prevReportQuery.data?.averageTicket)}
+            />
             {canViewMargin && (
               <StatTile
                 label="Margen bruto"
                 value={`$${data.grossMargin.toFixed(2)}`}
                 hint="Solo visible para roles autorizados"
+                trendPct={trendPct(data.grossMargin, prevReportQuery.data?.grossMargin)}
               />
             )}
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 rounded-2xl border bg-white p-4">
+            <Card className="p-4">
               <h2 className="text-carbon-700 dark:text-carbon-300 mb-3 text-sm font-semibold">
                 Ventas por forma de pago
               </h2>
@@ -187,9 +222,9 @@ export function ReportsPage() {
                   </PieChart>
                 </ResponsiveContainer>
               )}
-            </div>
+            </Card>
 
-            <div className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 rounded-2xl border bg-white p-4">
+            <Card className="p-4">
               <h2 className="text-carbon-700 dark:text-carbon-300 mb-3 text-sm font-semibold">
                 Productos más vendidos
               </h2>
@@ -230,9 +265,9 @@ export function ReportsPage() {
                   </BarChart>
                 </ResponsiveContainer>
               )}
-            </div>
+            </Card>
 
-            <div className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 rounded-2xl border bg-white p-4">
+            <Card className="p-4">
               <h2 className="text-carbon-700 dark:text-carbon-300 mb-3 text-sm font-semibold">
                 Horas pico
               </h2>
@@ -272,9 +307,9 @@ export function ReportsPage() {
                   </BarChart>
                 </ResponsiveContainer>
               )}
-            </div>
+            </Card>
 
-            <div className="border-carbon-200 dark:border-carbon-800 dark:bg-carbon-900 rounded-2xl border bg-white p-4">
+            <Card className="p-4">
               <h2 className="text-carbon-700 dark:text-carbon-300 mb-3 text-sm font-semibold">
                 Ventas por empleado
               </h2>
@@ -315,7 +350,7 @@ export function ReportsPage() {
                   </BarChart>
                 </ResponsiveContainer>
               )}
-            </div>
+            </Card>
           </div>
         </>
       )}

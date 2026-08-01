@@ -34,6 +34,26 @@ export async function listLowStockProducts(storeId: string): Promise<Product[]> 
   return data.filter((p) => p.stock <= p.min_stock)
 }
 
+export async function uploadProductImage(
+  storeId: string,
+  productId: string,
+  file: File,
+): Promise<string> {
+  const ext = file.name.split('.').pop() ?? 'jpg'
+  const path = `${storeId}/${productId}.${ext}`
+
+  const { error: uploadError } = await supabase.storage
+    .from('product-images')
+    .upload(path, file, { upsert: true, cacheControl: '3600' })
+  if (uploadError) throw uploadError
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from('product-images').getPublicUrl(path)
+
+  return `${publicUrl}?v=${Date.now()}`
+}
+
 export async function createProduct(product: ProductInsert): Promise<Product> {
   const { data, error } = await supabase.from('products').insert(product).select().single()
   if (error) throw error

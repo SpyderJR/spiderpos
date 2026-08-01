@@ -4,6 +4,7 @@ export interface LocalProduct {
   id: string
   storeId: string
   categoryId: string | null
+  categoryName: string | null
   barcode: string | null
   name: string
   price: number

@@ -48,6 +48,32 @@ export async function closeShift(shiftId: string, countedAmount: number) {
   return data as { theoretical: number; counted: number; difference: number }
 }
 
+export interface ShiftSalesSummary {
+  count: number
+  total: number
+}
+
+/**
+ * Resumen de ventas del turno EN CURSO — solo folios y total vendido, no
+ * el efectivo teórico esperado en cajón (eso se preserva oculto hasta el
+ * conteo físico: es justo lo que hace "ciego" al corte ciego, PRD 5.G).
+ */
+export async function fetchShiftSalesSummary(
+  storeId: string,
+  employeeId: string,
+  openedAt: string,
+): Promise<ShiftSalesSummary> {
+  const { data, error } = await supabase
+    .from('sales')
+    .select('total')
+    .eq('store_id', storeId)
+    .eq('employee_id', employeeId)
+    .eq('status', 'completed')
+    .gte('client_created_at', openedAt)
+  if (error) throw error
+  return { count: data.length, total: data.reduce((sum, s) => sum + s.total, 0) }
+}
+
 export async function listMovements(shiftId: string): Promise<CashMovement[]> {
   const { data, error } = await supabase
     .from('cash_movements')
