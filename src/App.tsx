@@ -45,6 +45,9 @@ const PromotionsPage = lazy(() =>
 const AuditLogPage = lazy(() =>
   import('./features/audit/AuditLogPage').then((m) => ({ default: m.AuditLogPage })),
 )
+const FacturasPage = lazy(() =>
+  import('./features/invoicing/FacturasPage').then((m) => ({ default: m.FacturasPage })),
+)
 const SubscriptionPage = lazy(() =>
   import('./features/subscription/SubscriptionPage').then((m) => ({
     default: m.SubscriptionPage,
@@ -107,6 +110,7 @@ function App() {
               <Route path="reportes" element={<ReportsPage />} />
               <Route path="promociones" element={<PromotionsPage />} />
               <Route path="auditoria" element={<AuditLogPage />} />
+              <Route path="facturas" element={<FacturasPage />} />
               <Route path="suscripcion" element={<SubscriptionPage />} />
               <Route path="perfil" element={<BusinessProfilePage />} />
               <Route path="personal" element={<StaffPage />} />

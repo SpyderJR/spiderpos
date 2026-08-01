@@ -8,6 +8,8 @@ import { Button } from '../../../components/ui/Button'
 import { useCurrentMember } from '../../auth/useCurrentMember'
 import { updateStoreProfile, uploadStoreLogo } from './api'
 import { useTourContext } from '../../onboarding/useProductTour'
+import { FiscalInvoicingSection } from '../../invoicing/FiscalInvoicingSection'
+import { REGIMENES_FISCALES } from '../../../lib/satCatalogs'
 
 const BUSINESS_TYPE_LABELS: Record<string, string> = {
   abarrotes: 'Abarrotes',
@@ -20,6 +22,12 @@ const schema = z.object({
   name: z.string().trim().min(2, 'Ingresa el nombre de tu negocio'),
   razon_social: z.string().trim().optional(),
   rfc: z.string().trim().optional(),
+  regimen_fiscal: z.string().trim().optional(),
+  codigo_postal_fiscal: z
+    .string()
+    .trim()
+    .regex(/^$|^\d{5}$/, 'El código postal debe tener 5 dígitos')
+    .optional(),
   address: z.string().trim().optional(),
   phone: z.string().trim().optional(),
   footer_message: z.string().trim().max(200, 'Máximo 200 caracteres').optional(),
@@ -55,6 +63,8 @@ export function BusinessProfilePage() {
           name: store.name,
           razon_social: (store.tax_data as Record<string, string> | null)?.razon_social ?? '',
           rfc: (store.tax_data as Record<string, string> | null)?.rfc ?? '',
+          regimen_fiscal: store.regimen_fiscal ?? '',
+          codigo_postal_fiscal: store.codigo_postal_fiscal ?? '',
           address: store.address ?? '',
           phone: store.phone ?? '',
           footer_message: store.footer_message ?? '',
@@ -84,6 +94,8 @@ export function BusinessProfilePage() {
     await updateStoreProfile(store.id, {
       name: values.name,
       tax_data: { razon_social: values.razon_social ?? '', rfc: values.rfc ?? '' },
+      regimen_fiscal: values.regimen_fiscal || null,
+      codigo_postal_fiscal: values.codigo_postal_fiscal || null,
       address: values.address || null,
       phone: values.phone || null,
       footer_message: values.footer_message || null,
@@ -182,6 +194,31 @@ export function BusinessProfilePage() {
             />
             <TextField label="RFC" error={errors.rfc?.message} {...register('rfc')} />
           </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-carbon-700 dark:text-carbon-300 text-sm font-medium">
+                Régimen fiscal
+              </label>
+              <select
+                {...register('regimen_fiscal')}
+                className="border-carbon-200 text-carbon-900 focus:border-brand-500 focus:ring-brand-500/30 dark:border-carbon-700 dark:bg-carbon-900 dark:text-paper rounded-xl border bg-white px-4 py-2.5 text-base outline-none focus:ring-2"
+              >
+                <option value="">Selecciona uno</option>
+                {REGIMENES_FISCALES.map((r) => (
+                  <option key={r.value} value={r.value}>
+                    {r.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <TextField
+              label="Código postal fiscal"
+              inputMode="numeric"
+              maxLength={5}
+              error={errors.codigo_postal_fiscal?.message}
+              {...register('codigo_postal_fiscal')}
+            />
+          </div>
           <TextField label="Dirección" error={errors.address?.message} {...register('address')} />
           <TextField
             label="Teléfono"
@@ -211,6 +248,18 @@ export function BusinessProfilePage() {
             )}
           </div>
         </form>
+      )}
+
+      {isOwner && !store.is_demo && (
+        <FiscalInvoicingSection
+          ready={store.facturama_issuer_ready}
+          fiscalDataComplete={
+            !!(store.tax_data as Record<string, string> | null)?.rfc &&
+            !!(store.tax_data as Record<string, string> | null)?.razon_social &&
+            !!store.regimen_fiscal &&
+            !!store.codigo_postal_fiscal
+          }
+        />
       )}
     </div>
   )

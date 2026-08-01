@@ -31,6 +31,7 @@ const PRIMARY_NAV = [
 const SECONDARY_NAV = [
   { to: '/backoffice/ventas', label: 'Ventas', icon: '🧾' },
   { to: '/backoffice/reportes', label: 'Reportes', icon: '📊' },
+  { to: '/backoffice/facturas', label: 'Facturas', icon: '🧮' },
   { to: '/backoffice/promociones', label: 'Promociones', icon: '🏷️' },
   { to: '/backoffice/auditoria', label: 'Auditoría', icon: '🕵️' },
   { to: '/backoffice/suscripcion', label: 'Suscripción', icon: '💳' },

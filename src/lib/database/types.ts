@@ -415,6 +415,82 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          cancelled_at: string | null
+          created_at: string
+          customer_email: string | null
+          customer_name: string
+          customer_rfc: string
+          error_message: string | null
+          facturama_id: string | null
+          id: string
+          issued_by: string | null
+          sale_id: string
+          status: string
+          store_id: string
+          total: number
+          uso_cfdi: string
+          uuid_fiscal: string | null
+        }
+        Insert: {
+          cancelled_at?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_rfc: string
+          error_message?: string | null
+          facturama_id?: string | null
+          id?: string
+          issued_by?: string | null
+          sale_id: string
+          status?: string
+          store_id: string
+          total: number
+          uso_cfdi: string
+          uuid_fiscal?: string | null
+        }
+        Update: {
+          cancelled_at?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_rfc?: string
+          error_message?: string | null
+          facturama_id?: string | null
+          id?: string
+          issued_by?: string | null
+          sale_id?: string
+          status?: string
+          store_id?: string
+          total?: number
+          uso_cfdi?: string
+          uuid_fiscal?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'invoices_issued_by_fkey'
+            columns: ['issued_by']
+            isOneToOne: false
+            referencedRelation: 'store_members'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'invoices_sale_id_fkey'
+            columns: ['sale_id']
+            isOneToOne: false
+            referencedRelation: 'sales'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'invoices_store_id_fkey'
+            columns: ['store_id']
+            isOneToOne: false
+            referencedRelation: 'stores'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       pending_signups: {
         Row: {
           business_name: string
@@ -1266,7 +1342,9 @@ export type Database = {
         Row: {
           address: string | null
           business_type: Database['public']['Enums']['store_business_type']
+          codigo_postal_fiscal: string | null
           created_at: string
+          facturama_issuer_ready: boolean
           footer_message: string | null
           id: string
           is_demo: boolean
@@ -1276,6 +1354,7 @@ export type Database = {
           payout_mp_account_id: string | null
           phone: string | null
           plan: Database['public']['Enums']['subscription_plan'] | null
+          regimen_fiscal: string | null
           subscription_status: Database['public']['Enums']['subscription_status']
           tax_data: Json
           trial_ends_at: string | null
@@ -1284,7 +1363,9 @@ export type Database = {
         Insert: {
           address?: string | null
           business_type: Database['public']['Enums']['store_business_type']
+          codigo_postal_fiscal?: string | null
           created_at?: string
+          facturama_issuer_ready?: boolean
           footer_message?: string | null
           id?: string
           is_demo?: boolean
@@ -1294,6 +1375,7 @@ export type Database = {
           payout_mp_account_id?: string | null
           phone?: string | null
           plan?: Database['public']['Enums']['subscription_plan'] | null
+          regimen_fiscal?: string | null
           subscription_status?: Database['public']['Enums']['subscription_status']
           tax_data?: Json
           trial_ends_at?: string | null
@@ -1302,7 +1384,9 @@ export type Database = {
         Update: {
           address?: string | null
           business_type?: Database['public']['Enums']['store_business_type']
+          codigo_postal_fiscal?: string | null
           created_at?: string
+          facturama_issuer_ready?: boolean
           footer_message?: string | null
           id?: string
           is_demo?: boolean
@@ -1312,6 +1396,7 @@ export type Database = {
           payout_mp_account_id?: string | null
           phone?: string | null
           plan?: Database['public']['Enums']['subscription_plan'] | null
+          regimen_fiscal?: string | null
           subscription_status?: Database['public']['Enums']['subscription_status']
           tax_data?: Json
           trial_ends_at?: string | null

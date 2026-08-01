@@ -11,6 +11,7 @@ import { listSales, fetchReceiptData } from './api'
 import { ReceiptActions } from './ReceiptActions'
 import { ReturnDialog } from './ReturnDialog'
 import { CancelSaleDialog } from './CancelSaleDialog'
+import { InvoiceSection } from '../invoicing/InvoiceSection'
 import type { ReceiptData } from './types'
 
 const METHOD_LABELS: Record<string, string> = {
@@ -143,6 +144,13 @@ export function SalesHistoryPage() {
               </div>
             </Card>
             <ReceiptActions data={receiptQuery.data} />
+
+            {activeSale?.status === 'completed' && (
+              <InvoiceSection
+                saleId={activeSale.id}
+                canCancel={member?.role === 'owner' || member?.role === 'manager'}
+              />
+            )}
 
             {canModify && canProcessReturns && (
               <div className="border-carbon-100 dark:border-carbon-800 flex gap-2 border-t pt-4">
