@@ -93,15 +93,27 @@ Deno.serve(async (req: Request) => {
         },
       }),
     })
-    preapproval = await preapprovalRes.json()
+    const rawBody = await preapprovalRes.text()
+    if (!preapprovalRes.ok) {
+      // Mercado Pago a veces devuelve un 500 genérico propio (no un error de
+      // validación) para un payer_email puntual — no es un bug de este
+      // endpoint, pero mostrarle "Internal server error" al usuario es
+      // alarmante y no dice qué hacer. Log para diagnóstico + mensaje
+      // accionable para el usuario.
+      console.error('MP preapproval rejected', preapprovalRes.status, rawBody)
+    }
+    preapproval = rawBody ? JSON.parse(rawBody) : {}
     if (!preapprovalRes.ok || !preapproval.init_point) {
       await admin.from('pending_signups').delete().eq('id', signup.id)
-      return jsonResponse(
-        { error: preapproval.message ?? 'No se pudo crear la suscripción en Mercado Pago' },
-        502,
-      )
+      const mpMessage = preapproval.message
+      const friendly =
+        !mpMessage || /internal server error/i.test(mpMessage)
+          ? 'Mercado Pago no pudo procesar el registro con este correo en este momento. Intenta de nuevo en unos minutos o usa otro correo.'
+          : mpMessage
+      return jsonResponse({ error: friendly }, 502)
     }
-  } catch {
+  } catch (err) {
+    console.error('create-checkout MP call threw', err)
     await admin.from('pending_signups').delete().eq('id', signup.id)
     return jsonResponse(
       { error: 'No se pudo conectar con Mercado Pago, intenta de nuevo en un momento' },

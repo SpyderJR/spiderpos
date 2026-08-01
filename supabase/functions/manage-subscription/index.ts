@@ -106,12 +106,18 @@ Deno.serve(async (req: Request) => {
         },
       }),
     })
-    preapproval = await preapprovalRes.json()
+    const rawBody = await preapprovalRes.text()
+    if (!preapprovalRes.ok) {
+      console.error('MP preapproval rejected', preapprovalRes.status, rawBody)
+    }
+    preapproval = rawBody ? JSON.parse(rawBody) : {}
     if (!preapprovalRes.ok || !preapproval.init_point) {
-      return jsonResponse(
-        { error: preapproval.message ?? 'No se pudo crear la suscripción en Mercado Pago' },
-        502,
-      )
+      const mpMessage = preapproval.message
+      const friendly =
+        !mpMessage || /internal server error/i.test(mpMessage)
+          ? 'Mercado Pago no pudo procesar la solicitud en este momento. Intenta de nuevo en unos minutos.'
+          : mpMessage
+      return jsonResponse({ error: friendly }, 502)
     }
   } catch {
     return jsonResponse(

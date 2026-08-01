@@ -250,7 +250,7 @@ export function BusinessProfilePage() {
         </form>
       )}
 
-      {isOwner && !store.is_demo && (
+      {isOwner && (
         <FiscalInvoicingSection
           ready={store.facturama_issuer_ready}
           fiscalDataComplete={
