@@ -17,7 +17,14 @@ const requestSchema = z.object({
   owner_full_name: z.string().trim().min(2).max(100),
   owner_email: z.email(),
   plan: z.enum(['monthly', 'annual']),
-  return_base_url: z.url(),
+  // Mercado Pago (modo producción) rechaza cualquier back_url que no sea
+  // https:// — por eso probar el pago completo desde localhost (http://)
+  // siempre falla del lado de MP, no es un bug de la app. Se valida aquí
+  // primero para dar un mensaje claro en vez del error críptico de MP.
+  return_base_url: z.url().refine((url) => url.startsWith('https://'), {
+    message:
+      'El pago con tarjeta solo se puede probar desde el sitio publicado (https://spiderpos.netlify.app), no desde localhost — Mercado Pago rechaza URLs de retorno sin https.',
+  }),
 })
 
 // La API de preapproval de Mercado Pago solo acepta frequency_type "days" o
@@ -42,7 +49,11 @@ Deno.serve(async (req: Request) => {
 
   const parsed = requestSchema.safeParse(await req.json().catch(() => null))
   if (!parsed.success) {
-    return jsonResponse({ error: 'Solicitud inválida', issues: parsed.error.issues }, 400)
+    const firstIssue = parsed.error.issues[0]?.message
+    return jsonResponse(
+      { error: firstIssue ?? 'Solicitud inválida', issues: parsed.error.issues },
+      400,
+    )
   }
   const { business_name, business_type, owner_full_name, owner_email, plan, return_base_url } =
     parsed.data

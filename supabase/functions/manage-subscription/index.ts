@@ -52,7 +52,11 @@ Deno.serve(async (req: Request) => {
 
   const parsed = requestSchema.safeParse(await req.json().catch(() => null))
   if (!parsed.success) {
-    return jsonResponse({ error: 'Solicitud inválida', issues: parsed.error.issues }, 400)
+    const firstIssue = parsed.error.issues[0]?.message
+    return jsonResponse(
+      { error: firstIssue ?? 'Solicitud inválida', issues: parsed.error.issues },
+      400,
+    )
   }
   const { action, new_plan, return_url } = parsed.data
 
