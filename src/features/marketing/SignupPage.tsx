@@ -147,6 +147,31 @@ export function SignupPage() {
           <Button type="submit" loading={isSubmitting} className="mt-2 w-full">
             Continuar al pago
           </Button>
+
+          <p className="text-carbon-400 text-center text-xs">
+            Al continuar aceptas nuestros{' '}
+            <Link
+              to="/terminos"
+              className="hover:text-brand-600 dark:hover:text-brand-400 hover:underline"
+            >
+              Términos
+            </Link>
+            , la{' '}
+            <Link
+              to="/privacidad"
+              className="hover:text-brand-600 dark:hover:text-brand-400 hover:underline"
+            >
+              Política de Privacidad
+            </Link>{' '}
+            y la{' '}
+            <Link
+              to="/reembolsos"
+              className="hover:text-brand-600 dark:hover:text-brand-400 hover:underline"
+            >
+              Política de Reembolsos
+            </Link>
+            .
+          </p>
         </form>
 
         <button

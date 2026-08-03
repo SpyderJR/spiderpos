@@ -15,9 +15,64 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="SpiderPOS" />
     <title>SpiderPOS — La telaraña que conecta todo tu negocio</title>
+    <style>
+      /* Splash mientras carga el bundle de React. Vive dentro de #root a
+         propósito: React reemplaza ese contenido al montar (createRoot
+         hace render, no append), así que desaparece solo, sin JS ni
+         parpadeo — nunca hay que "quitarlo" a mano. */
+      .app-splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        background: #111827;
+        animation: app-splash-pulse 1.6s ease-in-out infinite;
+      }
+      .app-splash img {
+        width: 72px;
+        height: 72px;
+      }
+      .app-splash span {
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+        font-size: 19px;
+        font-weight: 700;
+        color: #fafafa;
+        letter-spacing: -0.01em;
+      }
+      .app-splash b {
+        color: #818cf8;
+        font-weight: 700;
+      }
+      @keyframes app-splash-pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.55;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .app-splash {
+          animation: none;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="app-splash" aria-hidden="true">
+        <img src="/fotos/icono-192.png" alt="" width="72" height="72" />
+        <span>Spider<b>POS</b></span>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

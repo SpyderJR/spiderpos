@@ -248,6 +248,26 @@ export function LandingPage() {
       </main>
 
       <footer className="border-carbon-100 dark:border-carbon-800 border-t py-8 text-center">
+        <div className="text-carbon-400 mb-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs">
+          <Link
+            to="/terminos"
+            className="hover:text-brand-600 dark:hover:text-brand-400 hover:underline"
+          >
+            Términos y Condiciones
+          </Link>
+          <Link
+            to="/privacidad"
+            className="hover:text-brand-600 dark:hover:text-brand-400 hover:underline"
+          >
+            Política de Privacidad
+          </Link>
+          <Link
+            to="/reembolsos"
+            className="hover:text-brand-600 dark:hover:text-brand-400 hover:underline"
+          >
+            Política de Reembolsos
+          </Link>
+        </div>
         <p className="text-carbon-400 text-xs">
           © {new Date().getFullYear()} SpiderPOS. Todos los derechos reservados.
         </p>

@@ -61,6 +61,15 @@ const CheckoutReturnPage = lazy(() =>
     default: m.CheckoutReturnPage,
   })),
 )
+const TermsPage = lazy(() =>
+  import('./features/legal/TermsPage').then((m) => ({ default: m.TermsPage })),
+)
+const PrivacyPage = lazy(() =>
+  import('./features/legal/PrivacyPage').then((m) => ({ default: m.PrivacyPage })),
+)
+const RefundPolicyPage = lazy(() =>
+  import('./features/legal/RefundPolicyPage').then((m) => ({ default: m.RefundPolicyPage })),
+)
 const AdminProtectedRoute = lazy(() =>
   import('./features/admin/AdminProtectedRoute').then((m) => ({
     default: m.AdminProtectedRoute,
@@ -98,6 +107,9 @@ function App() {
           <Route path="/pin" element={<PinLoginPage />} />
           <Route path="/registro" element={<SignupPage />} />
           <Route path="/checkout/return" element={<CheckoutReturnPage />} />
+          <Route path="/terminos" element={<TermsPage />} />
+          <Route path="/privacidad" element={<PrivacyPage />} />
+          <Route path="/reembolsos" element={<RefundPolicyPage />} />
 
           <Route element={<ProtectedRoute />}>
             <Route path="/backoffice" element={<BackofficeLayout />}>
