@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { fetchPlatformTenants, setTenantStatus, renewCashSubscription } from './api'
+import { fetchPlatformTenants, setTenantStatus, renewCashSubscription, deleteTenant } from './api'
 
 const STATUS_LABELS: Record<string, string> = {
   trialing: 'En prueba',
@@ -38,6 +38,22 @@ export function AdminTenantsPage() {
     mutationFn: renewCashSubscription,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['platform-tenants'] }),
   })
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteTenant,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['platform-tenants'] }),
+    onError: (err) => alert(err instanceof Error ? err.message : 'No se pudo eliminar'),
+  })
+
+  function handleDelete(storeId: string, name: string) {
+    if (
+      confirm(
+        `¿Eliminar "${name}" para siempre? Se borran sus productos, ventas, clientes y personal — no se puede deshacer.`,
+      )
+    ) {
+      deleteMutation.mutate(storeId)
+    }
+  }
 
   const filtered = tenantsQuery.data?.filter((t) =>
     t.name.toLowerCase().includes(search.toLowerCase()),
@@ -113,6 +129,14 @@ export function AdminTenantsPage() {
                   Suspender
                 </button>
               )}
+              <button
+                type="button"
+                disabled={deleteMutation.isPending}
+                onClick={() => handleDelete(t.store_id, t.name)}
+                className="text-xs font-medium text-red-500 hover:underline disabled:opacity-60"
+              >
+                Eliminar
+              </button>
             </div>
           </div>
         ))}

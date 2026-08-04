@@ -65,6 +65,31 @@ export async function dismissCashSignupRequest(requestId: string) {
   if (error) throw error
 }
 
+export async function deleteTenant(storeId: string) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (!session) throw new Error('No autenticado')
+
+  const response = await fetch(`${env.VITE_SUPABASE_URL}/functions/v1/admin-delete-tenant`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: env.VITE_SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ store_id: storeId }),
+  })
+  const body: unknown = await response.json()
+  if (!response.ok) {
+    const message =
+      typeof body === 'object' && body && 'error' in body
+        ? String(body.error)
+        : 'No se pudo eliminar la tienda'
+    throw new Error(message)
+  }
+}
+
 export async function provisionCashTenant(requestId: string) {
   const {
     data: { session },
