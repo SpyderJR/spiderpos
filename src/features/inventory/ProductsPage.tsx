@@ -111,7 +111,7 @@ export function ProductsPage() {
         <Card className="border-amber-200! bg-amber-50 p-4 dark:border-amber-900/40! dark:bg-amber-900/20">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
-              ⚠️ {lowStockQuery.data.length} producto(s) con stock bajo
+              ⚠️ {lowStockQuery.data.length} producto(s) con cantidad baja
             </p>
             <div className="flex gap-2">
               <button
@@ -172,7 +172,7 @@ export function ProductsPage() {
               : 'bg-carbon-100 text-carbon-600 dark:bg-carbon-800 dark:text-carbon-300'
           }`}
         >
-          ⚠️ Stock bajo
+          ⚠️ Cantidad baja
         </button>
       </div>
 
@@ -230,7 +230,7 @@ export function ProductsPage() {
                       }}
                       className="text-carbon-500 hover:bg-carbon-100 dark:text-carbon-400 dark:hover:bg-carbon-800 mt-1 min-h-9 rounded-lg text-xs font-medium"
                     >
-                      Ajustar stock
+                      Ajustar cantidad
                     </button>
                   )}
                 </div>
@@ -311,6 +311,10 @@ export function ProductsPage() {
         }}
         storeId={storeId}
         product={editingProduct}
+        onAdjustStock={(p) => {
+          setFormOpen(false)
+          setAdjustingProduct(p)
+        }}
       />
       <StockAdjustDialog
         product={adjustingProduct}

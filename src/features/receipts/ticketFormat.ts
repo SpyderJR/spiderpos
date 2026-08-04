@@ -62,6 +62,7 @@ export function composeTicketLines(data: ReceiptData, width: 32 | 48): string[] 
   lines.push(rule)
   lines.push(twoColumns('Subtotal', money(data.subtotal), width))
   if (data.discount > 0) lines.push(twoColumns('Descuento', `-${money(data.discount)}`, width))
+  if (data.tax > 0) lines.push(twoColumns('IVA', money(data.tax), width))
   lines.push(twoColumns('TOTAL', money(data.total), width))
   lines.push(rule)
 

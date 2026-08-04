@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type LocalPromotion, type LocalProduct } from '../../lib/db'
 import { useCartStore, type CartLine } from '../../store/useCartStore'
 import { findApplicablePromotion, computeLinePricing } from './promotionsEngine'
+import { useCurrentMember } from '../auth/useCurrentMember'
 
 export interface PricedCartLine extends CartLine {
   computedDiscount: number
@@ -14,6 +15,9 @@ export interface PricedCartLine extends CartLine {
 export function useCartPricing(storeId: string | undefined) {
   const items = useCartStore((state) => state.items)
   const manualDiscount = useCartStore((state) => state.discount)
+  const { data: member } = useCurrentMember()
+  const taxEnabled = member?.stores?.tax_enabled ?? false
+  const taxRate = member?.stores?.tax_rate ?? 0
 
   const promotions = useLiveQuery(
     () =>
@@ -52,7 +56,20 @@ export function useCartPricing(storeId: string | undefined) {
 
   const subtotal = pricedItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
   const promotionsDiscount = pricedItems.reduce((sum, item) => sum + item.computedDiscount, 0)
-  const total = Math.max(0, subtotal - promotionsDiscount - manualDiscount)
+  const taxable = Math.max(0, subtotal - promotionsDiscount - manualDiscount)
+  // Espejo exacto del cálculo server-side en record_sale() — así lo que se
+  // le cobra al cliente coincide con lo que el servidor va a validar.
+  const tax = taxEnabled ? Math.round(taxable * taxRate) / 100 : 0
+  const total = taxable + tax
 
-  return { pricedItems, subtotal, promotionsDiscount, manualDiscount, total }
+  return {
+    pricedItems,
+    subtotal,
+    promotionsDiscount,
+    manualDiscount,
+    taxEnabled,
+    taxRate,
+    tax,
+    total,
+  }
 }

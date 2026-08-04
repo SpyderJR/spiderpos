@@ -1407,6 +1407,8 @@ export type Database = {
           regimen_fiscal: string | null
           subscription_status: Database['public']['Enums']['subscription_status']
           tax_data: Json
+          tax_enabled: boolean
+          tax_rate: number
           trial_ends_at: string | null
           updated_at: string
         }
@@ -1428,6 +1430,8 @@ export type Database = {
           regimen_fiscal?: string | null
           subscription_status?: Database['public']['Enums']['subscription_status']
           tax_data?: Json
+          tax_enabled?: boolean
+          tax_rate?: number
           trial_ends_at?: string | null
           updated_at?: string
         }
@@ -1449,6 +1453,8 @@ export type Database = {
           regimen_fiscal?: string | null
           subscription_status?: Database['public']['Enums']['subscription_status']
           tax_data?: Json
+          tax_enabled?: boolean
+          tax_rate?: number
           trial_ends_at?: string | null
           updated_at?: string
         }

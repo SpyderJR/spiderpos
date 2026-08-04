@@ -174,6 +174,7 @@ export async function testPrint(config: PrinterConfig): Promise<void> {
     ],
     subtotal: 1,
     discount: 0,
+    tax: 0,
     total: 1,
     payments: [{ method: 'cash', amount: 1, changeGiven: 0 }],
     isCopy: false,

@@ -37,13 +37,13 @@ export function StockAdjustDialog({ product, storeId, onClose }: StockAdjustDial
   if (!product) return null
 
   return (
-    <Modal open={!!product} onClose={onClose} title={`Ajustar stock — ${product.name}`}>
+    <Modal open={!!product} onClose={onClose} title={`Ajustar cantidad — ${product.name}`}>
       <div className="flex flex-col gap-4">
         <p className="text-carbon-500 dark:text-carbon-400 text-sm">
-          Stock actual: {product.stock}
+          Cantidad actual: {product.stock}
         </p>
         <TextField
-          label="Nuevo stock"
+          label="Nueva cantidad"
           type="number"
           step={isPiece ? '1' : '0.01'}
           value={newStock}

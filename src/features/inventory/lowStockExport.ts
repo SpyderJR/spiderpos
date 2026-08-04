@@ -21,7 +21,7 @@ export async function buildLowStockPdf(products: Product[], storeName: string): 
 
   doc.setFont('helvetica', 'bold')
   doc.text('Producto', margin, y)
-  doc.text('Stock', 340, y)
+  doc.text('Cantidad', 340, y)
   doc.text('Mínimo', 410, y)
   doc.text('Sugerido', 490, y)
   y += 6

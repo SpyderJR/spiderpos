@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -31,6 +31,8 @@ const schema = z.object({
   address: z.string().trim().optional(),
   phone: z.string().trim().optional(),
   footer_message: z.string().trim().max(200, 'Máximo 200 caracteres').optional(),
+  tax_enabled: z.boolean(),
+  tax_rate: z.coerce.number().min(0, 'No puede ser negativo').max(100, 'Máximo 100%'),
   payout_clabe: z
     .string()
     .trim()
@@ -38,7 +40,8 @@ const schema = z.object({
     .optional(),
 })
 
-type FormValues = z.infer<typeof schema>
+type FormInput = z.input<typeof schema>
+type FormValues = z.output<typeof schema>
 
 export function BusinessProfilePage() {
   const { data: member } = useCurrentMember()
@@ -55,8 +58,9 @@ export function BusinessProfilePage() {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting, isDirty },
-  } = useForm<FormValues>({
+  } = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(schema),
     values: store
       ? {
@@ -68,10 +72,13 @@ export function BusinessProfilePage() {
           address: store.address ?? '',
           phone: store.phone ?? '',
           footer_message: store.footer_message ?? '',
+          tax_enabled: store.tax_enabled,
+          tax_rate: store.tax_rate,
           payout_clabe: store.payout_clabe ?? '',
         }
       : undefined,
   })
+  const taxEnabled = useWatch({ control, name: 'tax_enabled' })
 
   useEffect(() => {
     if (saved) {
@@ -99,6 +106,8 @@ export function BusinessProfilePage() {
       address: values.address || null,
       phone: values.phone || null,
       footer_message: values.footer_message || null,
+      tax_enabled: values.tax_enabled,
+      tax_rate: values.tax_rate,
       payout_clabe: values.payout_clabe || null,
     })
     await queryClient.invalidateQueries({ queryKey: ['current-member'] })
@@ -231,6 +240,30 @@ export function BusinessProfilePage() {
             error={errors.footer_message?.message}
             {...register('footer_message')}
           />
+
+          <div className="border-carbon-100 dark:border-carbon-800 flex flex-col gap-3 rounded-xl border p-4">
+            <label className="text-carbon-700 dark:text-carbon-300 flex items-center gap-2 text-sm font-medium">
+              <input type="checkbox" className="h-4 w-4" {...register('tax_enabled')} />
+              Cobrar IVA en mis ventas
+            </label>
+            {taxEnabled && (
+              <TextField
+                label="Porcentaje de IVA"
+                type="number"
+                step="0.01"
+                inputMode="decimal"
+                error={errors.tax_rate?.message}
+                {...register('tax_rate')}
+              />
+            )}
+            {!taxEnabled && (
+              <p className="text-carbon-400 text-xs">
+                Si no la activas, tus ventas se cobran sin IVA — como la mayoría de los negocios
+                pequeños que no lo desglosan.
+              </p>
+            )}
+          </div>
+
           <TextField
             label="CLABE interbancaria (payouts)"
             inputMode="numeric"

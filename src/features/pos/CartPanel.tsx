@@ -25,8 +25,16 @@ export function CartPanel({ storeId, canDiscountWithoutPin, onCheckout, onPark }
   const updateQuantity = useCartStore((state) => state.updateQuantity)
   const removeItem = useCartStore((state) => state.removeItem)
   const setDiscount = useCartStore((state) => state.setDiscount)
-  const { pricedItems, subtotal, promotionsDiscount, manualDiscount, total } =
-    useCartPricing(storeId)
+  const {
+    pricedItems,
+    subtotal,
+    promotionsDiscount,
+    manualDiscount,
+    taxEnabled,
+    taxRate,
+    tax,
+    total,
+  } = useCartPricing(storeId)
 
   const [pinModalOpen, setPinModalOpen] = useState(false)
   const [discountInput, setDiscountInput] = useState(false)
@@ -202,6 +210,13 @@ export function CartPanel({ storeId, canDiscountWithoutPin, onCheckout, onPark }
             onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
             className="border-carbon-200 dark:border-carbon-700 dark:bg-carbon-900 mt-1 w-full rounded-lg border px-3 py-1.5 text-sm"
           />
+        )}
+
+        {taxEnabled && (
+          <div className="text-carbon-500 dark:text-carbon-400 flex items-center justify-between text-sm">
+            <span>IVA ({taxRate}%)</span>
+            <span className="tabular-nums">${tax.toFixed(2)}</span>
+          </div>
         )}
 
         <div className="text-carbon-900 dark:text-paper mt-2 flex items-center justify-between text-2xl font-bold tabular-nums">

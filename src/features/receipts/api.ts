@@ -36,7 +36,7 @@ export async function fetchReceiptData(saleId: string): Promise<ReceiptData> {
   const { data: sale, error: saleError } = await supabase
     .from('sales')
     .select(
-      `id, total, subtotal, discount, client_created_at,
+      `id, total, subtotal, discount, tax, client_created_at,
        store_members!employee_id(full_name),
        customers(name),
        stores(name, address, phone, logo_url, footer_message),
@@ -69,6 +69,7 @@ export async function fetchReceiptData(saleId: string): Promise<ReceiptData> {
     })),
     subtotal: sale.subtotal,
     discount: sale.discount,
+    tax: sale.tax,
     total: sale.total,
     payments: sale.sale_payments.map((p) => ({
       method: p.method,

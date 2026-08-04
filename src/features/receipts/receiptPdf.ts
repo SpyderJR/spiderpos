@@ -111,6 +111,12 @@ export async function buildReceiptPdf(data: ReceiptData): Promise<Blob> {
     y += 14
   }
 
+  if (data.tax > 0) {
+    doc.text('IVA', margin, y)
+    doc.text(`$${data.tax.toFixed(2)}`, pageWidth - margin, y, { align: 'right' })
+    y += 14
+  }
+
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(11)
   doc.text('TOTAL', margin, y)

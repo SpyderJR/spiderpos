@@ -58,9 +58,16 @@ interface ProductFormDialogProps {
   onClose: () => void
   storeId: string
   product: Product | null
+  onAdjustStock?: (product: Product) => void
 }
 
-export function ProductFormDialog({ open, onClose, storeId, product }: ProductFormDialogProps) {
+export function ProductFormDialog({
+  open,
+  onClose,
+  storeId,
+  product,
+  onAdjustStock,
+}: ProductFormDialogProps) {
   const queryClient = useQueryClient()
   const isEdit = !!product
 
@@ -295,7 +302,7 @@ export function ProductFormDialog({ open, onClose, storeId, product }: ProductFo
             </select>
           </div>
           <TextField
-            label="Stock mínimo"
+            label="Cantidad mínima"
             type="number"
             step={stockStep}
             error={errors.min_stock?.message}
@@ -305,12 +312,27 @@ export function ProductFormDialog({ open, onClose, storeId, product }: ProductFo
 
         {!isEdit && (
           <TextField
-            label="Stock inicial"
+            label="Cantidad inicial"
             type="number"
             step={stockStep}
             error={errors.initial_stock?.message}
             {...register('initial_stock')}
           />
+        )}
+
+        {isEdit && onAdjustStock && (
+          <div className="border-carbon-100 dark:border-carbon-800 flex items-center justify-between rounded-xl border p-3">
+            <p className="text-carbon-700 dark:text-carbon-300 text-sm">
+              Cantidad actual: <span className="font-semibold">{product.stock}</span>
+            </p>
+            <button
+              type="button"
+              onClick={() => onAdjustStock(product)}
+              className="text-brand-600 dark:text-brand-400 text-sm font-medium hover:underline"
+            >
+              Ajustar cantidad
+            </button>
+          </div>
         )}
 
         <label className="text-carbon-700 dark:text-carbon-300 flex items-center gap-2 text-sm">
