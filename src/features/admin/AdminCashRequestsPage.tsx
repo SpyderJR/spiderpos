@@ -19,9 +19,16 @@ const STATUS_COLORS: Record<string, string> = {
   dismissed: 'bg-carbon-800 text-carbon-400',
 }
 
+interface NewCredentials {
+  business_name: string
+  owner_email: string
+  temp_password: string
+}
+
 export function AdminCashRequestsPage() {
   const queryClient = useQueryClient()
   const [error, setError] = useState<string | null>(null)
+  const [newCredentials, setNewCredentials] = useState<NewCredentials | null>(null)
   const requestsQuery = useQuery({
     queryKey: ['cash-signup-requests'],
     queryFn: fetchCashSignupRequests,
@@ -29,8 +36,14 @@ export function AdminCashRequestsPage() {
 
   const provisionMutation = useMutation({
     mutationFn: provisionCashTenant,
-    onSuccess: () => {
+    onSuccess: (result, requestId) => {
       setError(null)
+      const request = requestsQuery.data?.find((r) => r.id === requestId)
+      setNewCredentials({
+        business_name: request?.business_name ?? 'la tienda',
+        owner_email: result.owner_email,
+        temp_password: result.temp_password,
+      })
       queryClient.invalidateQueries({ queryKey: ['cash-signup-requests'] })
       queryClient.invalidateQueries({ queryKey: ['platform-tenants'] })
     },
@@ -54,6 +67,35 @@ export function AdminCashRequestsPage() {
           alta aquí — su tienda queda activa al instante.
         </p>
       </div>
+
+      {newCredentials && (
+        <div className="rounded-xl border border-emerald-800 bg-emerald-950/30 p-4">
+          <div className="mb-2 flex items-start justify-between gap-3">
+            <p className="text-sm font-semibold text-emerald-300">
+              ✅ {newCredentials.business_name} ya está activa — pásale estos datos a tu cliente por
+              WhatsApp o en persona (no se van a volver a mostrar):
+            </p>
+            <button
+              type="button"
+              onClick={() => setNewCredentials(null)}
+              className="shrink-0 text-xs text-emerald-400 hover:underline"
+            >
+              Cerrar
+            </button>
+          </div>
+          <div className="bg-carbon-950 flex flex-col gap-1 rounded-lg p-3 font-mono text-sm">
+            <p className="text-paper">
+              Usuario: <span className="text-emerald-300">{newCredentials.owner_email}</span>
+            </p>
+            <p className="text-paper">
+              Contraseña: <span className="text-emerald-300">{newCredentials.temp_password}</span>
+            </p>
+          </div>
+          <p className="text-carbon-400 mt-2 text-xs">
+            Entra en spiderpos.netlify.app → "Ya tengo cuenta" con esos datos.
+          </p>
+        </div>
+      )}
 
       {error && <p className="text-sm text-red-400">{error}</p>}
       {requestsQuery.isLoading && <p className="text-carbon-400 text-sm">Cargando...</p>}

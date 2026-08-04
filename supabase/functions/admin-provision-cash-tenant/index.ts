@@ -14,6 +14,16 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
 const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
+// Sin 0/O/1/I/l ni parecidos — el admin la va a dictar o escribir por
+// WhatsApp a alguien que puede no ser muy digital, así que evitamos
+// caracteres que se confunden entre sí al leerlos en voz alta o a mano.
+const PASSWORD_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+
+function generateReadablePassword(length = 8): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(length))
+  return Array.from(bytes, (b) => PASSWORD_ALPHABET[b % PASSWORD_ALPHABET.length]).join('')
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return jsonResponse({ error: 'Método no permitido' }, 405)
@@ -56,9 +66,10 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: 'Esta solicitud ya fue procesada' }, 409)
   }
 
+  const tempPassword = generateReadablePassword()
   const { data: newUser, error: createErr } = await admin.auth.admin.createUser({
     email: signup.owner_email,
-    password: crypto.randomUUID(),
+    password: tempPassword,
     email_confirm: true,
   })
   if (createErr || !newUser.user) {
@@ -106,5 +117,12 @@ Deno.serve(async (req: Request) => {
     .update({ status: 'provisioned', store_id: store.id, provisioned_at: new Date().toISOString() })
     .eq('id', signup.id)
 
-  return jsonResponse({ store_id: store.id })
+  // La contraseña solo se devuelve esta vez — no queda guardada en ningún
+  // lado en texto plano (Auth solo guarda el hash). Cópiala del panel
+  // ahora, porque no se puede volver a mostrar después.
+  return jsonResponse({
+    store_id: store.id,
+    owner_email: signup.owner_email,
+    temp_password: tempPassword,
+  })
 })

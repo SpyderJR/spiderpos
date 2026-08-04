@@ -116,4 +116,5 @@ export async function provisionCashTenant(requestId: string) {
         : 'No se pudo dar de alta la tienda'
     throw new Error(message)
   }
+  return body as { store_id: string; owner_email: string; temp_password: string }
 }
