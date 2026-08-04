@@ -20,18 +20,35 @@ import type { Database } from '../../lib/database/types'
 
 type Product = Database['public']['Tables']['products']['Row']
 
-const schema = z.object({
-  name: z.string().trim().min(2, 'Ingresa el nombre'),
-  barcode: z.string().trim().optional(),
-  category_id: z.string().optional(),
-  newCategory: z.string().trim().optional(),
-  price: z.coerce.number().min(0, 'El precio no puede ser negativo'),
-  cost: z.coerce.number().min(0, 'El costo no puede ser negativo'),
-  unit_type: z.enum(['piece', 'kg', 'g', 'lt', 'm']),
-  min_stock: z.coerce.number().min(0),
-  is_favorite: z.boolean(),
-  active: z.boolean(),
-})
+// Una "pieza" no se vende fraccionada — 2.99 piezas no existe. kg/g/lt/m sí
+// admiten decimales (2.5 kg de arroz a granel es real). Se valida aquí,
+// no solo con el step del input, porque el step no bloquea pegar/escribir
+// un decimal a mano.
+const wholeWhenPiece = (data: { unit_type: string; value: number }) =>
+  data.unit_type !== 'piece' || Number.isInteger(data.value)
+
+const schema = z
+  .object({
+    name: z.string().trim().min(2, 'Ingresa el nombre'),
+    barcode: z.string().trim().optional(),
+    category_id: z.string().optional(),
+    newCategory: z.string().trim().optional(),
+    price: z.coerce.number().min(0, 'El precio no puede ser negativo'),
+    cost: z.coerce.number().min(0, 'El costo no puede ser negativo'),
+    unit_type: z.enum(['piece', 'kg', 'g', 'lt', 'm']),
+    initial_stock: z.coerce.number().min(0),
+    min_stock: z.coerce.number().min(0),
+    is_favorite: z.boolean(),
+    active: z.boolean(),
+  })
+  .refine((d) => wholeWhenPiece({ unit_type: d.unit_type, value: d.initial_stock }), {
+    message: 'El stock de productos por pieza debe ser un número entero',
+    path: ['initial_stock'],
+  })
+  .refine((d) => wholeWhenPiece({ unit_type: d.unit_type, value: d.min_stock }), {
+    message: 'El stock mínimo por pieza debe ser un número entero',
+    path: ['min_stock'],
+  })
 
 type FormInput = z.input<typeof schema>
 type FormValues = z.output<typeof schema>
@@ -75,6 +92,7 @@ export function ProductFormDialog({ open, onClose, storeId, product }: ProductFo
       price: 0,
       cost: 0,
       unit_type: 'piece',
+      initial_stock: 0,
       min_stock: 0,
       is_favorite: false,
       active: true,
@@ -91,6 +109,7 @@ export function ProductFormDialog({ open, onClose, storeId, product }: ProductFo
         price: product?.price ?? 0,
         cost: product?.cost ?? 0,
         unit_type: product?.unit_type ?? 'piece',
+        initial_stock: 0,
         min_stock: product?.min_stock ?? 0,
         is_favorite: product?.is_favorite ?? false,
         active: product?.active ?? true,
@@ -129,7 +148,7 @@ export function ProductFormDialog({ open, onClose, storeId, product }: ProductFo
 
       const savedId = isEdit
         ? (await updateProduct(product.id, payload)).id
-        : (await createProduct({ ...payload, store_id: storeId, stock: 0 })).id
+        : (await createProduct({ ...payload, store_id: storeId, stock: values.initial_stock })).id
 
       if (imageFile) {
         const url = await uploadProductImage(storeId, savedId, imageFile)
@@ -166,6 +185,8 @@ export function ProductFormDialog({ open, onClose, storeId, product }: ProductFo
   })
 
   const newCategory = useWatch({ control, name: 'newCategory' })
+  const unitType = useWatch({ control, name: 'unit_type' })
+  const stockStep = unitType === 'piece' ? '1' : '0.01'
 
   return (
     <Modal open={open} onClose={onClose} title={isEdit ? 'Editar producto' : 'Nuevo producto'}>
@@ -273,8 +294,24 @@ export function ProductFormDialog({ open, onClose, storeId, product }: ProductFo
               <option value="m">Metro</option>
             </select>
           </div>
-          <TextField label="Stock mínimo" type="number" step="0.01" {...register('min_stock')} />
+          <TextField
+            label="Stock mínimo"
+            type="number"
+            step={stockStep}
+            error={errors.min_stock?.message}
+            {...register('min_stock')}
+          />
         </div>
+
+        {!isEdit && (
+          <TextField
+            label="Stock inicial"
+            type="number"
+            step={stockStep}
+            error={errors.initial_stock?.message}
+            {...register('initial_stock')}
+          />
+        )}
 
         <label className="text-carbon-700 dark:text-carbon-300 flex items-center gap-2 text-sm">
           <input type="checkbox" className="h-4 w-4" {...register('is_favorite')} />

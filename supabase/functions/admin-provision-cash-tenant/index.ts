@@ -110,7 +110,8 @@ Deno.serve(async (req: Request) => {
     current_period_end: periodEnd.toISOString(),
   })
 
-  await admin.rpc('seed_store_catalog', { p_store_id: store.id })
+  // Sin seed_store_catalog aquí a propósito: una tienda real empieza vacía,
+  // el dueño da de alta su propio inventario (el tour/checklist lo guía).
 
   await admin
     .from('cash_signup_requests')

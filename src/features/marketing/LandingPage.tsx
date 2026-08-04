@@ -54,8 +54,8 @@ const PLANS = [
 const INCLUDES = [
   {
     icon: '🏪',
-    title: 'Tu tienda lista desde el minuto uno',
-    desc: 'Catálogo de ejemplo según tu giro (abarrotes, papelería, farmacia o ferretería), listo para que empieces a vender de inmediato — nunca ves una pantalla vacía.',
+    title: 'Configúrala a tu manera desde el minuto uno',
+    desc: 'Un tour guiado te enseña paso a paso a dar de alta tus productos, tu personal y tus datos de cobro — en minutos tienes tu propio catálogo listo para vender.',
   },
   {
     icon: '👥',

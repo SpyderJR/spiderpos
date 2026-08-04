@@ -131,6 +131,7 @@ export function PaymentModal({
               autoFocus
               value={amountInput}
               onChange={(e) => setAmountInput(e.target.value)}
+              onFocus={(e) => e.currentTarget.select()}
               className="border-carbon-200 text-carbon-900 focus:border-brand-500 focus:ring-brand-500/30 dark:border-carbon-700 dark:bg-carbon-900 dark:text-paper rounded-xl border bg-white px-4 py-3 text-center text-2xl outline-none focus:ring-2"
             />
             <div className="flex gap-2">

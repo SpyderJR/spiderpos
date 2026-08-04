@@ -19,8 +19,13 @@ export function StockAdjustDialog({ product, storeId, onClose }: StockAdjustDial
   const [newStock, setNewStock] = useState('')
   const [reason, setReason] = useState('')
 
+  const isPiece = product?.unit_type === 'piece'
+
   const mutation = useMutation({
-    mutationFn: () => adjustStock(product!.id, Number.parseFloat(newStock), reason),
+    mutationFn: () => {
+      const value = Number.parseFloat(newStock)
+      return adjustStock(product!.id, isPiece ? Math.round(value) : value, reason)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products', storeId] })
       setNewStock('')
@@ -40,7 +45,7 @@ export function StockAdjustDialog({ product, storeId, onClose }: StockAdjustDial
         <TextField
           label="Nuevo stock"
           type="number"
-          step="0.01"
+          step={isPiece ? '1' : '0.01'}
           value={newStock}
           onChange={(e) => setNewStock(e.target.value)}
         />
