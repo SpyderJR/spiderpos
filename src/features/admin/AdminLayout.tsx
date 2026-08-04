@@ -5,6 +5,7 @@ import { signOut } from '../auth/api'
 const NAV = [
   { to: '/admin', label: 'Dashboard', end: true },
   { to: '/admin/tenants', label: 'Tiendas' },
+  { to: '/admin/efectivo', label: 'Pagos en efectivo' },
 ]
 
 export function AdminLayout() {

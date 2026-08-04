@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { fetchPlatformTenants, setTenantStatus } from './api'
+import { fetchPlatformTenants, setTenantStatus, renewCashSubscription } from './api'
 
 const STATUS_LABELS: Record<string, string> = {
   trialing: 'En prueba',
@@ -18,6 +18,11 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: 'bg-red-950/40 text-red-400',
 }
 
+function daysUntil(dateStr: string): number {
+  const ms = new Date(dateStr).getTime() - Date.now()
+  return Math.ceil(ms / (1000 * 60 * 60 * 24))
+}
+
 export function AdminTenantsPage() {
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
@@ -26,6 +31,11 @@ export function AdminTenantsPage() {
   const mutation = useMutation({
     mutationFn: ({ storeId, status }: { storeId: string; status: 'active' | 'suspended' }) =>
       setTenantStatus(storeId, status),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['platform-tenants'] }),
+  })
+
+  const renewMutation = useMutation({
+    mutationFn: renewCashSubscription,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['platform-tenants'] }),
   })
 
@@ -53,11 +63,22 @@ export function AdminTenantsPage() {
             className="border-carbon-800 bg-carbon-900 flex items-center justify-between rounded-xl border p-4"
           >
             <div>
-              <p className="text-paper font-medium">{t.name}</p>
+              <p className="text-paper font-medium">
+                {t.provider === 'cash' ? '💵' : t.provider ? '💳' : '⚪'} {t.name}
+              </p>
               <p className="text-carbon-400 text-xs">
                 {t.owner_email ?? 'sin dueño'} · {t.plan ?? 'sin plan'} ·{' '}
                 {new Date(t.created_at).toLocaleDateString('es-MX')}
               </p>
+              {t.provider === 'cash' && t.current_period_end && (
+                <p
+                  className={`text-xs ${daysUntil(t.current_period_end) < 0 ? 'text-red-400' : daysUntil(t.current_period_end) <= 5 ? 'text-amber-400' : 'text-carbon-500'}`}
+                >
+                  {daysUntil(t.current_period_end) < 0
+                    ? `Venció hace ${Math.abs(daysUntil(t.current_period_end))} día(s)`
+                    : `Vence en ${daysUntil(t.current_period_end)} día(s)`}
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-3">
               <span
@@ -65,6 +86,16 @@ export function AdminTenantsPage() {
               >
                 {STATUS_LABELS[t.subscription_status] ?? t.subscription_status}
               </span>
+              {t.provider === 'cash' && (
+                <button
+                  type="button"
+                  disabled={renewMutation.isPending}
+                  onClick={() => renewMutation.mutate(t.store_id)}
+                  className="text-brand-400 text-xs font-medium hover:underline disabled:opacity-60"
+                >
+                  Registrar renovación
+                </button>
+              )}
               {t.subscription_status === 'suspended' ? (
                 <button
                   type="button"

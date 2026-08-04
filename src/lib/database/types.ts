@@ -217,6 +217,56 @@ export type Database = {
           },
         ]
       }
+      cash_signup_requests: {
+        Row: {
+          business_name: string
+          business_type: Database['public']['Enums']['store_business_type']
+          created_at: string
+          id: string
+          owner_email: string
+          owner_full_name: string
+          owner_phone: string
+          plan: Database['public']['Enums']['subscription_plan']
+          provisioned_at: string | null
+          status: Database['public']['Enums']['cash_signup_status']
+          store_id: string | null
+        }
+        Insert: {
+          business_name: string
+          business_type: Database['public']['Enums']['store_business_type']
+          created_at?: string
+          id?: string
+          owner_email: string
+          owner_full_name: string
+          owner_phone: string
+          plan: Database['public']['Enums']['subscription_plan']
+          provisioned_at?: string | null
+          status?: Database['public']['Enums']['cash_signup_status']
+          store_id?: string | null
+        }
+        Update: {
+          business_name?: string
+          business_type?: Database['public']['Enums']['store_business_type']
+          created_at?: string
+          id?: string
+          owner_email?: string
+          owner_full_name?: string
+          owner_phone?: string
+          plan?: Database['public']['Enums']['subscription_plan']
+          provisioned_at?: string | null
+          status?: Database['public']['Enums']['cash_signup_status']
+          store_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'cash_signup_requests_store_id_fkey'
+            columns: ['store_id']
+            isOneToOne: false
+            referencedRelation: 'stores'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -1612,11 +1662,16 @@ export type Database = {
           name: string
           owner_email: string
           plan: Database['public']['Enums']['subscription_plan']
+          provider: Database['public']['Enums']['subscription_provider']
           store_id: string
           subscription_status: Database['public']['Enums']['subscription_status']
         }[]
       }
       open_cash_shift: { Args: { p_opening_amount: number }; Returns: string }
+      platform_renew_cash_subscription: {
+        Args: { p_store_id: string }
+        Returns: undefined
+      }
       platform_set_store_status: {
         Args: {
           p_status: Database['public']['Enums']['subscription_status']
@@ -1661,6 +1716,7 @@ export type Database = {
     Enums: {
       cash_movement_type: 'in' | 'out'
       cash_shift_status: 'open' | 'closed'
+      cash_signup_status: 'pending' | 'provisioned' | 'dismissed'
       payment_status: 'approved' | 'rejected' | 'pending' | 'refunded'
       product_unit_type: 'piece' | 'kg' | 'g' | 'lt' | 'm'
       promotion_type: 'percentage' | 'fixed' | '2x1' | '3x2' | 'bulk_price'
@@ -1673,7 +1729,7 @@ export type Database = {
       store_business_type: 'abarrotes' | 'papeleria' | 'farmacia' | 'ferreteria'
       store_role: 'owner' | 'manager' | 'cashier'
       subscription_plan: 'monthly' | 'annual'
-      subscription_provider: 'stripe' | 'mercadopago'
+      subscription_provider: 'stripe' | 'mercadopago' | 'cash'
       subscription_status: 'trialing' | 'active' | 'past_due' | 'suspended' | 'cancelled'
       webhook_provider: 'mercadopago'
     }
@@ -1802,6 +1858,7 @@ export const Constants = {
     Enums: {
       cash_movement_type: ['in', 'out'],
       cash_shift_status: ['open', 'closed'],
+      cash_signup_status: ['pending', 'provisioned', 'dismissed'],
       payment_status: ['approved', 'rejected', 'pending', 'refunded'],
       product_unit_type: ['piece', 'kg', 'g', 'lt', 'm'],
       promotion_type: ['percentage', 'fixed', '2x1', '3x2', 'bulk_price'],
@@ -1814,7 +1871,7 @@ export const Constants = {
       store_business_type: ['abarrotes', 'papeleria', 'farmacia', 'ferreteria'],
       store_role: ['owner', 'manager', 'cashier'],
       subscription_plan: ['monthly', 'annual'],
-      subscription_provider: ['stripe', 'mercadopago'],
+      subscription_provider: ['stripe', 'mercadopago', 'cash'],
       subscription_status: ['trialing', 'active', 'past_due', 'suspended', 'cancelled'],
       webhook_provider: ['mercadopago'],
     },

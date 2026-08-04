@@ -437,3 +437,8 @@ verify_jwt = false
 [functions.demo-login]
 # Público: cualquier visitante puede entrar al modo demo sin cuenta.
 verify_jwt = false
+
+[functions.request-cash-signup]
+# Público: cualquier prospecto puede dejar sus datos para pagar en
+# efectivo, antes de tener cuenta.
+verify_jwt = false

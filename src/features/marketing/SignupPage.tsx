@@ -182,6 +182,16 @@ export function SignupPage() {
           O prueba la demo gratis sin registrarte
         </button>
 
+        <p className="text-carbon-400 mt-4 text-center text-xs">
+          ¿No tienes o no quieres usar tarjeta?{' '}
+          <Link
+            to="/registro-efectivo"
+            className="text-brand-600 dark:text-brand-400 font-medium hover:underline"
+          >
+            Paga en efectivo
+          </Link>
+        </p>
+
         <p className="text-carbon-400 mt-6 text-center text-xs">
           <Link to="/" className="hover:underline">
             ← Volver

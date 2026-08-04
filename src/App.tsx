@@ -56,6 +56,9 @@ const SubscriptionPage = lazy(() =>
 const SignupPage = lazy(() =>
   import('./features/marketing/SignupPage').then((m) => ({ default: m.SignupPage })),
 )
+const CashSignupPage = lazy(() =>
+  import('./features/marketing/CashSignupPage').then((m) => ({ default: m.CashSignupPage })),
+)
 const CheckoutReturnPage = lazy(() =>
   import('./features/marketing/CheckoutReturnPage').then((m) => ({
     default: m.CheckoutReturnPage,
@@ -84,6 +87,11 @@ const AdminDashboardPage = lazy(() =>
 const AdminTenantsPage = lazy(() =>
   import('./features/admin/AdminTenantsPage').then((m) => ({ default: m.AdminTenantsPage })),
 )
+const AdminCashRequestsPage = lazy(() =>
+  import('./features/admin/AdminCashRequestsPage').then((m) => ({
+    default: m.AdminCashRequestsPage,
+  })),
+)
 
 function RouteFallback() {
   return (
@@ -106,6 +114,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/pin" element={<PinLoginPage />} />
           <Route path="/registro" element={<SignupPage />} />
+          <Route path="/registro-efectivo" element={<CashSignupPage />} />
           <Route path="/checkout/return" element={<CheckoutReturnPage />} />
           <Route path="/terminos" element={<TermsPage />} />
           <Route path="/privacidad" element={<PrivacyPage />} />
@@ -133,6 +142,7 @@ function App() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboardPage />} />
               <Route path="tenants" element={<AdminTenantsPage />} />
+              <Route path="efectivo" element={<AdminCashRequestsPage />} />
             </Route>
           </Route>
 

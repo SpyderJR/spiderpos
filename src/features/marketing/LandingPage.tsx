@@ -244,6 +244,15 @@ export function LandingPage() {
               </div>
             ))}
           </div>
+          <p className="text-carbon-400 mt-6 text-center text-sm">
+            💵 ¿No tienes o no te gusta usar tarjeta?{' '}
+            <Link
+              to="/registro-efectivo"
+              className="text-brand-600 dark:text-brand-400 font-medium hover:underline"
+            >
+              Paga en efectivo — te ayudamos a coordinarlo
+            </Link>
+          </p>
         </section>
       </main>
 

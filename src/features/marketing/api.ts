@@ -39,6 +39,35 @@ export async function createCheckout(input: CreateCheckoutInput) {
   return checkoutResponseSchema.parse(body)
 }
 
+export interface CashSignupInput {
+  business_name: string
+  business_type: 'abarrotes' | 'papeleria' | 'farmacia' | 'ferreteria'
+  owner_full_name: string
+  owner_email: string
+  owner_phone: string
+  plan: 'monthly' | 'annual'
+}
+
+export async function requestCashSignup(input: CashSignupInput) {
+  const response = await fetch(`${env.VITE_SUPABASE_URL}/functions/v1/request-cash-signup`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: env.VITE_SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${env.VITE_SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify(input),
+  })
+  const body: unknown = await response.json()
+  if (!response.ok) {
+    const message =
+      typeof body === 'object' && body && 'error' in body
+        ? String(body.error)
+        : 'No se pudo enviar tu solicitud'
+    throw new Error(message)
+  }
+}
+
 const signupStatusSchema = z.object({
   status: z.enum(['pending', 'provisioned', 'expired']),
   email: z.email().optional(),
