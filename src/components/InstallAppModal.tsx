@@ -11,7 +11,7 @@ export function InstallAppModal({ open, onClose }: InstallAppModalProps) {
   const { canPromptInstall, isIos, installed, promptInstall } = useInstallPrompt()
 
   return (
-    <Modal open={open} onClose={onClose} title="Instala SpiderPOS en tu celular">
+    <Modal open={open} onClose={onClose} title="Instala SpiderPOS como app">
       <div className="flex flex-col gap-4">
         {installed ? (
           <p className="text-carbon-600 dark:text-carbon-300 text-center text-sm">
