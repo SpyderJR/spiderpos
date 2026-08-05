@@ -132,7 +132,7 @@ export function CartPanel({ storeId, canDiscountWithoutPin, onCheckout, onPark }
                         >
                           −
                         </button>
-                        <span className="w-6 text-center text-sm font-semibold tabular-nums">
+                        <span className="text-carbon-900 dark:text-paper w-6 text-center text-sm font-semibold tabular-nums">
                           {item.quantity}
                         </span>
                         <button
@@ -145,11 +145,11 @@ export function CartPanel({ storeId, canDiscountWithoutPin, onCheckout, onPark }
                         </button>
                       </div>
                     ) : (
-                      <span className="text-sm font-medium tabular-nums">
+                      <span className="text-carbon-900 dark:text-paper text-sm font-medium tabular-nums">
                         {item.quantity} {UNIT_LABELS[item.unitType]}
                       </span>
                     )}
-                    <span className="w-16 text-right text-sm font-bold tabular-nums">
+                    <span className="text-carbon-900 dark:text-paper w-16 text-right text-sm font-bold tabular-nums">
                       ${item.computedSubtotal.toFixed(2)}
                     </span>
                     <button

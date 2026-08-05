@@ -170,7 +170,9 @@ export function CashRegisterPage() {
                       </span>
                       {m.reason}
                     </span>
-                    <span className="font-semibold tabular-nums">${m.amount.toFixed(2)}</span>
+                    <span className="text-carbon-900 dark:text-paper font-semibold tabular-nums">
+                      ${m.amount.toFixed(2)}
+                    </span>
                   </li>
                 ))}
               </ul>

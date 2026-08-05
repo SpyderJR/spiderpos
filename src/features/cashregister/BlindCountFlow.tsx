@@ -71,7 +71,7 @@ export function BlindCountFlow({ onComplete, onCancel }: BlindCountFlowProps) {
               <span className="text-carbon-600 dark:text-carbon-300">
                 {d.label} × {counts[d.value]}
               </span>
-              <span className="font-semibold tabular-nums">
+              <span className="text-carbon-900 dark:text-paper font-semibold tabular-nums">
                 ${(d.value * (counts[d.value] ?? 0)).toFixed(2)}
               </span>
             </li>
