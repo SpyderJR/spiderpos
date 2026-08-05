@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Modal } from '../../components/ui/Modal'
 import { TextField } from '../../components/ui/TextField'
 import { Button } from '../../components/ui/Button'
+import { compressImage } from '../../lib/compressImage'
 import {
   createProduct,
   updateProduct,
@@ -132,6 +133,7 @@ export function ProductFormDialog({
   // valores ya nacen correctos para el producto actual.
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(product?.image_url ?? null)
+  const [compressingImage, setCompressingImage] = useState(false)
 
   const saveMutation = useMutation({
     mutationFn: async (values: FormValues) => {
@@ -207,7 +209,12 @@ export function ProductFormDialog({
             htmlFor="product-photo"
             className="border-carbon-200 dark:border-carbon-700 bg-carbon-50 dark:bg-carbon-800 relative flex h-16 w-16 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border"
           >
-            {imagePreview ? (
+            {compressingImage ? (
+              <span
+                className="border-brand-500 h-5 w-5 animate-spin rounded-full border-2 border-t-transparent"
+                aria-label="Procesando foto"
+              />
+            ) : imagePreview ? (
               <img src={imagePreview} alt="" className="h-full w-full object-cover" />
             ) : (
               <span className="text-2xl" aria-hidden="true">
@@ -220,11 +227,17 @@ export function ProductFormDialog({
               accept="image/*"
               capture="environment"
               className="sr-only"
-              onChange={(e) => {
+              onChange={async (e) => {
                 const file = e.target.files?.[0]
                 if (!file) return
-                setImageFile(file)
-                setImagePreview(URL.createObjectURL(file))
+                setCompressingImage(true)
+                try {
+                  const compressed = await compressImage(file)
+                  setImageFile(compressed)
+                  setImagePreview(URL.createObjectURL(compressed))
+                } finally {
+                  setCompressingImage(false)
+                }
               }}
             />
           </label>

@@ -7,6 +7,7 @@ import { TextField } from '../../../components/ui/TextField'
 import { Button } from '../../../components/ui/Button'
 import { useCurrentMember } from '../../auth/useCurrentMember'
 import { updateStoreProfile, uploadStoreLogo } from './api'
+import { compressImage } from '../../../lib/compressImage'
 import { useTourContext } from '../../onboarding/useProductTour'
 import { FiscalInvoicingSection } from '../../invoicing/FiscalInvoicingSection'
 import { REGIMENES_FISCALES } from '../../../lib/satCatalogs'
@@ -162,10 +163,11 @@ export function BusinessProfilePage() {
               type="file"
               accept="image/png,image/jpeg,image/webp,image/svg+xml"
               className="hidden"
-              onChange={(e) => {
+              onChange={async (e) => {
                 const file = e.target.files?.[0]
-                if (file) logoMutation.mutate(file)
                 e.target.value = ''
+                if (!file) return
+                logoMutation.mutate(await compressImage(file))
               }}
             />
             <Button
